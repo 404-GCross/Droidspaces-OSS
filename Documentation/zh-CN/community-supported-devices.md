@@ -20,7 +20,7 @@ keywords: droidspaces, supported, devices, android, device, compatibility, kerne
 >
 > 这些仓库未经 Droidspaces 团队深度审计或审查。请自行承担风险。
 
-本文档是社区维护的已知可成功运行 Droidspaces 的 Android 设备兼容性列表。旨在帮助人们选择用于自托管的手机，尤其是在购买二手硬件时。
+本文档是社区维护的已知可成功运行 Droidspaces 的 Android 设备兼容性列表。旨在帮助人们选择合适的设备，尤其是在购买二手硬件时。
 
 ## Non-GKI 设备（内核 4.19 及更低版本）
 
