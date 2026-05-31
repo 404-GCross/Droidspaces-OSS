@@ -189,7 +189,7 @@ keywords: droidspaces, supported, devices, android, device, compatibility, kerne
 - 在内核源码列中提供你的 Droidspaces 内核的确切源代码链接。
 - 记录确切的 `Baseband / Build` 字符串（仅限 Non-GKI 设备必填）。
 - 指定所使用的 `Root 方式`，例如 `Magisk`、`KernelSU`、`APatch` 或 `none`。（GKI内核设备仅编译内核而不添加任何root方案；你需要自行修补 `init_boot` 以获得 root 权限。）
-- 将 `状态` 设置为以下之一：`正常运行`、`Partial` 或 `Unusable`。
+- 将 `状态` 设置为以下之一：`正常运行`、`部分可用` 或 `不可用`。
 - 在备注中包含已知的异常和问题、额外的设置步骤以及推荐的工作负载。
 - 通过 GitHub pull request 提交贡献。
 - 当状态变化时更新条目，并保持信息为最新。
