@@ -292,7 +292,7 @@ void ds_x11_daemon_start(struct ds_config *cfg) {
     return;
 
   ds_log("[X11] launching Termux-X11 server (uid=%d)", uid);
-  pid_t child = spawn_xserver(uid, ":0");
+  pid_t child = spawn_xserver(uid, TX11_DISPLAY_STR);
   if (child > 0) {
     cfg->x11_pid = child;
     x11_write_pid(child);
@@ -324,7 +324,7 @@ void ds_x11_daemon_stop(struct ds_config *cfg) {
   }
 
   x11_remove_pid();
-  unlink(TX11_SOCK_DIR "/X0");
+  unlink(TX11_SOCK_DIR "/" TX11_DISPLAY_SOCK);
 }
 
 /* ---- socket bridge ---------------------------------------------------- */
@@ -362,7 +362,7 @@ int ds_setup_x11_socket(struct ds_config *cfg) {
     snprintf(dst, sizeof(dst), "%s/X0", DS_X11_CONTAINER_DIR);
     if (bind_x0(src, dst, 0) < 0)
       return -1;
-    ds_log("Bridged host X11 socket file (X0) with container");
+    ds_log("X11: Bridged host X11 socket (X0) with container");
     return 0;
   }
 
@@ -372,7 +372,8 @@ int ds_setup_x11_socket(struct ds_config *cfg) {
 
   char src_dir[PATH_MAX], src[PATH_MAX], dst[PATH_MAX];
   snprintf(src_dir, sizeof(src_dir), "%s/.X11-unix", DS_TERMUX_TMP_OLDROOT);
-  snprintf(src, sizeof(src), "%s/.X11-unix/X0", DS_TERMUX_TMP_OLDROOT);
+  snprintf(src, sizeof(src), "%s/.X11-unix/" TX11_DISPLAY_SOCK,
+           DS_TERMUX_TMP_OLDROOT);
 
   struct stat st;
   if (stat(src_dir, &st) != 0) {
@@ -381,7 +382,9 @@ int ds_setup_x11_socket(struct ds_config *cfg) {
     return 0;
   }
   if (access(src, F_OK) != 0) {
-    ds_warn("[X11] X0 socket not found at %s - skipping socket bridge", src);
+    ds_warn("[X11] " TX11_DISPLAY_SOCK
+            " socket not found at %s - skipping socket bridge",
+            src);
     return 0;
   }
 
@@ -392,11 +395,18 @@ int ds_setup_x11_socket(struct ds_config *cfg) {
   }
   chmod(DS_X11_CONTAINER_DIR, 01777);
 
-  snprintf(dst, sizeof(dst), "%s/X0", DS_X11_CONTAINER_DIR);
+  snprintf(dst, sizeof(dst), "%s/" TX11_DISPLAY_SOCK, DS_X11_CONTAINER_DIR);
   if (bind_x0(src, dst, termux_uid) < 0)
     return 0;
 
-  ds_log("Termux:X11: X0 socket bind-mounted into container (uid=%d)",
+  ds_log("[X11] " TX11_DISPLAY_SOCK
+         " socket bind-mounted into container (uid=%d)",
          (int)termux_uid);
+  ds_log("Termux:X11: display is " TX11_DISPLAY_STR " (X%d bind mount)",
+         TX11_DISPLAY_NUM);
+
+  /* Inject DISPLAY into the container environment so all processes see it */
+  setenv("DISPLAY", TX11_DISPLAY_STR, 1);
+
   return 0;
 }

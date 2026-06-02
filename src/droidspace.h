@@ -120,6 +120,13 @@
 #define DS_DEFAULT_SUBNET "172.28.0.0/16"
 #define DS_MAX_TRACKED_ENTRIES 512
 
+/* X11 Display Number - change this one value to relocate everything */
+#define TX11_DISPLAY_NUM 5
+#define _DS_STR(x) #x
+#define _DS_XSTR(x) _DS_STR(x)
+#define TX11_DISPLAY_STR ":" _DS_XSTR(TX11_DISPLAY_NUM)
+#define TX11_DISPLAY_SOCK "X" _DS_XSTR(TX11_DISPLAY_NUM)
+
 /* X11 Socket Paths (Host-side relative to /.old_root or absolute) */
 #define DS_X11_PATH_DESKTOP "/.old_root/tmp/.X11-unix"
 #define DS_TERMUX_TMP_OLDROOT "/.old_root/data/data/com.termux/files/usr/tmp"

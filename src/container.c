@@ -448,13 +448,13 @@ int start_rootfs(struct ds_config *cfg) {
   }
 
   /* 2b. Android: start Termux-X11 server before fork so the socket exists
-   * when setup_x11_and_virgl_sockets() bind-mounts X0 socket later */
+   * when setup_x11_and_virgl_sockets() bind-mounts the socket later */
   if (is_android() && cfg->termux_x11) {
     ds_x11_daemon_start(cfg);
 
-    /* Wait up to 10s for X0 socket */
+    /* Wait up to 10s for the X socket */
     for (int _i = 0; _i < 100; _i++) {
-      if (access("/data/data/com.termux/files/usr/tmp/.X11-unix/X0", F_OK) == 0)
+      if (access("/data/data/com.termux/files/usr/tmp/.X11-unix/" TX11_DISPLAY_SOCK, F_OK) == 0)
         break;
       usleep(100000);
     }
@@ -1176,7 +1176,7 @@ int start_rootfs(struct ds_config *cfg) {
       if (is_android() && cfg->termux_x11) {
         ds_x11_daemon_start(cfg);
         for (int _i = 0; _i < 100; _i++) {
-          if (access(TX11_SOCK_DIR "/X0", F_OK) == 0)
+          if (access(TX11_SOCK_DIR "/" TX11_DISPLAY_SOCK, F_OK) == 0)
             break;
           usleep(100000);
         }
