@@ -48,6 +48,7 @@ SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/boot.c \
        $(SRC_DIR)/config.c \
        $(SRC_DIR)/container.c \
+       $(SRC_DIR)/monitor.c \
        $(SRC_DIR)/environment.c \
        $(SRC_DIR)/documentation.c \
        $(SRC_DIR)/hardware.c \
@@ -56,6 +57,9 @@ SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/ds_dhcp.c \
        $(SRC_DIR)/daemon.c \
        $(SRC_DIR)/check.c \
+       $(SRC_DIR)/x11.c \
+       $(SRC_DIR)/virgl-android.c \
+       $(SRC_DIR)/pulseaudio-android.c \
        $(SRC_DIR)/virtualize.c
 
 # Compiler flags - hardened warning set, all warnings are errors

@@ -42,6 +42,18 @@ class ContainerInstallationViewModel : ViewModel() {
     var enableTermuxX11: Boolean by mutableStateOf(false)
         private set
 
+    var tx11ExtraFlags: String by mutableStateOf("")
+        private set
+
+    var enableVirgl: Boolean by mutableStateOf(false)
+        private set
+
+    var virglExtraFlags: String by mutableStateOf("")
+        private set
+
+    var enablePulseaudio: Boolean by mutableStateOf(false)
+        private set
+
     var selinuxPermissive: Boolean by mutableStateOf(false)
         private set
 
@@ -108,6 +120,10 @@ class ContainerInstallationViewModel : ViewModel() {
         enableHwAccess: Boolean,
         enableGpuMode: Boolean,
         enableTermuxX11: Boolean,
+        tx11ExtraFlags: String,
+        enableVirgl: Boolean,
+        virglExtraFlags: String,
+        enablePulseaudio: Boolean,
         selinuxPermissive: Boolean,
         volatileMode: Boolean,
         bindMounts: List<BindMount>,
@@ -128,6 +144,10 @@ class ContainerInstallationViewModel : ViewModel() {
         this.enableHwAccess = enableHwAccess
         this.enableGpuMode = enableGpuMode
         this.enableTermuxX11 = enableTermuxX11
+        this.tx11ExtraFlags = tx11ExtraFlags
+        this.enableVirgl = enableVirgl
+        this.virglExtraFlags = virglExtraFlags
+        this.enablePulseaudio = enablePulseaudio
         this.selinuxPermissive = selinuxPermissive
         this.volatileMode = volatileMode
         this.bindMounts = bindMounts
@@ -161,6 +181,10 @@ class ContainerInstallationViewModel : ViewModel() {
             enableHwAccess = enableHwAccess,
             enableGpuMode = enableGpuMode,
             enableTermuxX11 = enableTermuxX11,
+            tx11ExtraFlags = tx11ExtraFlags,
+            enableVirgl = enableVirgl,
+            virglExtraFlags = virglExtraFlags,
+            enablePulseaudio = enablePulseaudio,
             selinuxPermissive = selinuxPermissive,
             volatileMode = volatileMode,
             bindMounts = bindMounts,
@@ -190,6 +214,10 @@ class ContainerInstallationViewModel : ViewModel() {
         enableHwAccess = false
         enableGpuMode = false
         enableTermuxX11 = false
+        tx11ExtraFlags = ""
+        enableVirgl = false
+        virglExtraFlags = ""
+        enablePulseaudio = false
         selinuxPermissive = false
         volatileMode = false
         bindMounts = emptyList()

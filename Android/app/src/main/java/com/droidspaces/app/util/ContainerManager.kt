@@ -35,6 +35,10 @@ data class ContainerInfo(
     val enableHwAccess: Boolean = false,
     val enableGpuMode: Boolean = false,
     val enableTermuxX11: Boolean = false,
+    val tx11ExtraFlags: String = "",
+    val enableVirgl: Boolean = false,
+    val virglExtraFlags: String = "",
+    val enablePulseaudio: Boolean = false,
     val selinuxPermissive: Boolean = false,
     val volatileMode: Boolean = false,
     val bindMounts: List<BindMount> = emptyList(),
@@ -70,6 +74,10 @@ data class ContainerInfo(
         appendLine("enable_hw_access=${if (enableHwAccess) "1" else "0"}")
         appendLine("enable_gpu_mode=${if (enableGpuMode) "1" else "0"}")
         appendLine("enable_termux_x11=${if (enableTermuxX11) "1" else "0"}")
+        if (tx11ExtraFlags.isNotBlank()) appendLine("tx11_extra_flags=$tx11ExtraFlags")
+        appendLine("enable_virgl=${if (enableVirgl) "1" else "0"}")
+        if (virglExtraFlags.isNotBlank()) appendLine("virgl_extra_flags=$virglExtraFlags")
+        appendLine("enable_pulseaudio=${if (enablePulseaudio) "1" else "0"}")
         appendLine("selinux_permissive=${if (selinuxPermissive) "1" else "0"}")
         appendLine("volatile_mode=${if (volatileMode) "1" else "0"}")
         if (bindMounts.isNotEmpty()) {
@@ -292,6 +300,10 @@ object ContainerManager {
                 enableHwAccess = configMap["enable_hw_access"] == "1",
                 enableGpuMode = configMap["enable_gpu_mode"] == "1",
                 enableTermuxX11 = configMap["enable_termux_x11"] == "1",
+                tx11ExtraFlags = configMap["tx11_extra_flags"] ?: "",
+                enableVirgl = configMap["enable_virgl"] == "1",
+                virglExtraFlags = configMap["virgl_extra_flags"] ?: "",
+                enablePulseaudio = configMap["enable_pulseaudio"] == "1",
                 selinuxPermissive = configMap["selinux_permissive"] == "1",
                 volatileMode = configMap["volatile_mode"] == "1",
                 bindMounts = bindMounts,

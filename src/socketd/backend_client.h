@@ -18,6 +18,53 @@ struct ContainerPortResult {
   std::uint8_t proto = 0; /* 0 = tcp, 1 = udp */
 };
 
+struct InspectEnvResult {
+  std::string key;
+  std::string value;
+};
+
+struct InspectBindResult {
+  std::string source;
+  std::string destination;
+  bool read_only = false;
+};
+
+struct ContainerInspectResult {
+  std::string name;
+  std::string uuid;
+  std::string rootfs_path;
+  std::string image_ref;
+  std::string hostname;
+  std::string nat_ip;
+  std::string custom_init;
+  std::string dns_servers;
+  std::int32_t pid = 0;
+  std::uint8_t net_mode = 0; /* 0 = host, 1 = nat, 2 = none */
+  std::int64_t started_at = 0;
+  std::int64_t memory_limit = 0;
+  std::int64_t cpu_quota = 0;
+  std::int64_t cpu_period = 0;
+  std::int64_t pids_limit = 0;
+  std::int32_t privileged_mask = 0;
+  bool foreground = false;
+  bool volatile_mode = false;
+  bool force_cgroupv1 = false;
+  bool disable_ipv6 = false;
+  bool android_storage = false;
+  bool selinux_permissive = false;
+  bool hw_access = false;
+  bool gpu_mode = false;
+  bool termux_x11 = false;
+  bool block_nested_ns = false;
+  bool is_img_mount = false;
+  std::uint16_t env_total_count = 0;
+  std::uint16_t bind_total_count = 0;
+  std::uint16_t port_total_count = 0;
+  std::vector<InspectEnvResult> env;
+  std::vector<InspectBindResult> binds;
+  std::vector<ContainerPortResult> ports;
+};
+
 struct ContainerRecordResult {
   std::string name;
   std::string uuid;
@@ -54,6 +101,12 @@ struct CoreEventResult {
   std::string actor_name;
 };
 
+struct LifecycleResult {
+  bool not_found = false;
+  bool already_running = false;
+  bool already_stopped = false;
+};
+
 class BackendClient {
 public:
   BackendClient() = default;
@@ -65,6 +118,11 @@ public:
                        std::vector<ContainerRecordResult> &out,
                        std::string &error) const;
 
+  bool inspect_container(const std::string &ref,
+                         ContainerInspectResult &out,
+                         bool &not_found,
+                         std::string &error) const;
+
   bool info(InfoResult &out, std::string &error) const;
 
   bool list_images(std::vector<ImageRecordResult> &out,
@@ -73,7 +131,18 @@ public:
   bool poll_events(std::int64_t since, std::vector<CoreEventResult> &out,
                    std::string &error) const;
 
+  bool start_container(const std::string &ref, LifecycleResult &out,
+                       std::string &error) const;
+  bool stop_container(const std::string &ref, int timeout_seconds,
+                      LifecycleResult &out, std::string &error) const;
+  bool restart_container(const std::string &ref, int timeout_seconds,
+                         LifecycleResult &out, std::string &error) const;
+
 private:
+  bool lifecycle_request(std::uint16_t opcode, const std::string &ref,
+                         int timeout_seconds, LifecycleResult &out,
+                         std::string &error) const;
+
   bool request(std::uint16_t opcode, const void *payload,
                std::uint32_t payload_len, std::uint16_t &status_out,
                std::string &payload_out, std::string &error) const;

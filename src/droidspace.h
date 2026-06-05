@@ -120,14 +120,43 @@
 #define DS_DEFAULT_SUBNET "172.28.0.0/16"
 #define DS_MAX_TRACKED_ENTRIES 512
 
+/* X11 Display Number - change this one value to relocate everything */
+#define TX11_DISPLAY_NUM 5
+#define _DS_STR(x) #x
+#define _DS_XSTR(x) _DS_STR(x)
+#define TX11_DISPLAY_STR ":" _DS_XSTR(TX11_DISPLAY_NUM)
+#define TX11_DISPLAY_SOCK "X" _DS_XSTR(TX11_DISPLAY_NUM)
+
 /* X11 Socket Paths (Host-side relative to /.old_root or absolute) */
 #define DS_X11_PATH_DESKTOP "/.old_root/tmp/.X11-unix"
-#define DS_TERMUX_TMP_DIR "/data/data/com.termux/files/usr/tmp"
 #define DS_TERMUX_TMP_OLDROOT "/.old_root/data/data/com.termux/files/usr/tmp"
 #define DS_X11_CONTAINER_DIR "/tmp/.X11-unix"
 
+/* Termux paths (used by x11.c; kept here for single-source-of-truth) */
+#define TX11_DATA_DIR "/data/user/0/com.termux"
+#define TX11_DATA_ALT "/data/data/com.termux"
+#define TX11_PREFIX "/data/data/com.termux/files/usr"
+#define TX11_HOME "/data/data/com.termux/files/home"
+#define TX11_LOADER TX11_PREFIX "/libexec/termux-x11/loader.apk"
+#define TX11_SOCK_DIR TX11_PREFIX "/tmp/.X11-unix"
+#define TX11_PACKAGES "/data/system/packages.list"
+
+/* VirGL Paths (Android only) */
+#define DS_VIRGL_SOCKET "/tmp/.virgl_test"
+#define TX11_VIRGL_SOCKET TX11_PREFIX "/tmp/.virgl_test"
+#define TX11_VIRGL_BIN TX11_PREFIX "/bin/virgl_test_server_android"
+
+/* PulseAudio paths (Android only) */
+#define DS_PULSE_SOCKET "/tmp/.pulse-socket"
+#define TX11_PULSE_SOCKET TX11_PREFIX "/tmp/.pulse-socket"
+#define TX11_PULSE_BIN TX11_PREFIX "/bin/pulseaudio"
+#define TX11_PACTL_BIN TX11_PREFIX "/bin/pactl"
+#define TX11_PULSE_DEFAULT_SINK "AAudio_sink"
+
 /* File Extensions */
 #define DS_EXT_PID ".pid"
+#define DS_EXT_XPID ".xpid"
+#define DS_EXT_VPID ".vpid"
 #define DS_EXT_MOUNT ".mount"
 #define DS_EXT_LOCK ".lock"
 #define DS_EXT_INIT ".init"
@@ -306,23 +335,30 @@ struct ds_config {
   int hw_access;          /* --hw-access */
   int gpu_mode;           /* --gpu: mirror GPU nodes into isolated tmpfs /dev */
   int termux_x11;         /* --termux-x11 (Android only) */
-  int volatile_mode;      /* --volatile */
-  int disable_ipv6;       /* --disable-ipv6 */
-  int android_storage;    /* --enable-android-storage */
-  int selinux_permissive; /* --selinux-permissive */
-  int net_bridgeless;     /* Probe result: no CONFIG_BRIDGE, use PTP NAT */
-  int reboot_cycle;       /* 1 if we are in a reboot loop */
-  int force_cgroupv1;     /* --force-cgroupv1: use v1 even if v2 is available */
-  int block_nested_ns;    /* --block-nested-namespaces: fix VFS deadlock by
-                               blocking nested namespace creation */
-  int privileged_mask;    /* --privileged bitmask */
-  int format_output;      /* --format: machine-parseable output (KEY=VALUE) */
-  char prog_name[64];     /* argv[0] for logging */
+  char *tx11_extra_flags; /* --tx11-flags "..." (heap, NULL if unset) */
+  int virgl;              /* --virgl (Android only) */
+  char *virgl_extra_flags; /* --virgl-flags "..." (heap, NULL if unset) */
+  int pulseaudio;          /* --pulse-audio (Android only) */
+  int volatile_mode;       /* --volatile */
+  int disable_ipv6;        /* --disable-ipv6 */
+  int android_storage;     /* --enable-android-storage */
+  int selinux_permissive;  /* --selinux-permissive */
+  int net_bridgeless;      /* Probe result: no CONFIG_BRIDGE, use PTP NAT */
+  int reboot_cycle;        /* 1 if we are in a reboot loop */
+  int force_cgroupv1;  /* --force-cgroupv1: use v1 even if v2 is available */
+  int block_nested_ns; /* --block-nested-namespaces: fix VFS deadlock by
+                            blocking nested namespace creation */
+  int privileged_mask; /* --privileged bitmask */
+  int format_output;   /* --format: machine-parseable output (KEY=VALUE) */
+  char prog_name[64];  /* argv[0] for logging */
 
   /* Runtime state */
   char volatile_dir[PATH_MAX];    /* temporary overlay dir */
   pid_t container_pid;            /* PID 1 of the container (host view) */
   pid_t intermediate_pid;         /* intermediate fork pid */
+  pid_t x11_pid;                  /* PID of the Termux-X11 server process */
+  pid_t virgl_pid;                /* PID of the VirGL server process */
+  pid_t pulse_pid;                /* PID of the PulseAudio daemon process */
   int is_img_mount;               /* 1 if rootfs was loop-mounted from .img */
   char img_mount_point[PATH_MAX]; /* where the .img was mounted */
   ds_init_type_t init_type;       /* detected container PID 1 init family */
@@ -432,6 +468,12 @@ ds_init_type_t detect_container_init(const char *path);
 int get_user_shell(const char *user, char *shell_buf, size_t size);
 void check_kernel_recommendation(void);
 void write_monitor_debug_log(const char *name, const char *fmt, ...);
+void ds_monitor_run(struct ds_config *cfg, int sync_pipe_write);
+int is_external_lock_active(const char *name);
+int wait_for_socket_or_death(pid_t pid, const char *path, int timeout_ms,
+                             int interval_us);
+void cleanup_container_resources(struct ds_config *cfg, pid_t pid,
+                                 int skip_unmount, int force_cleanup);
 void ds_open_container_log(struct ds_config *cfg);
 void ds_close_container_log(void);
 void ds_socketd_record_core_event(const char *action,
@@ -441,8 +483,24 @@ void sort_bind_mounts(struct ds_config *cfg);
 void sanitize_container_name(const char *name, char *out, size_t size);
 int validate_container_name(const char *name);
 int reject_container_name(const char *name);
+int parse_and_validate_names(const char *optarg, char *out_buf,
+                             size_t out_size);
+int ds_multi_stop(const char *raw_names);
 int validate_bind_destination(const char *dest);
 int count_folders(const char *path);
+
+/* Daemon lifecycle helpers */
+typedef void (*ds_child_fn)(int ready_fd, void *user_data);
+pid_t ds_daemon_read_pid(const char *filename);
+void ds_daemon_write_pid(const char *filename, pid_t pid);
+void ds_daemon_remove_pid(const char *filename);
+void ds_oom_protect(void);
+void ds_spawn_log_relay(int pipe_read_fd, const char *log_file,
+                        const char *tag);
+pid_t ds_spawn_daemon(ds_child_fn child_fn, void *user_data,
+                      const char *log_file, const char *tag, const char *label);
+int ds_bind_mount_socket(const char *src, const char *dst, uid_t uid,
+                         const char *label);
 
 /* ---------------------------------------------------------------------------
  * config.c
@@ -458,6 +516,8 @@ int ds_config_add_bind(struct ds_config *cfg, const char *src, const char *dest,
 void free_config_binds(struct ds_config *cfg);
 void free_config_env_vars(struct ds_config *cfg);
 void free_config_unknown_lines(struct ds_config *cfg);
+int ds_split_flags(const char *str, char ***out_argv, int *out_argc);
+void ds_free_split_flags(char **argv, int argc);
 char *ds_config_auto_path(const char *rootfs_path);
 void apply_reset_config(struct ds_config *cfg, int cli_net_mode_set,
                         enum ds_net_mode cli_net_mode);
@@ -476,6 +536,13 @@ int android_setup_storage(const char *rootfs_path);
 int android_seccomp_setup(int is_systemd, int block_nested_ns,
                           int privileged_mask);
 int ds_seccomp_apply_minimal(int privileged_mask);
+
+/* SELinux + Termux privilege helpers */
+const char *ds_extract_mls(const char *ctx);
+void ds_selinux_dyntransition(const char *mls, char *applied_ctx,
+                              size_t ctx_size);
+int ds_drop_privileges(int uid);
+int ds_resolve_termux_uid(void);
 
 /* ---------------------------------------------------------------------------
  * mount.c
@@ -540,11 +607,33 @@ unsigned long ds_get_pid_ns_inode(pid_t pid);
 int scan_host_gpu_gids(gid_t *gids, int max_gids);
 void mirror_gpu_nodes(const char *dev_path);
 int setup_gpu_groups(void);
-void stop_termux_if_running(void);
-int setup_unified_tmpfs(void);
-void cleanup_unified_tmpfs(void);
-int setup_x11_and_virgl_sockets(struct ds_config *cfg);
 int setup_hardware_access(struct ds_config *cfg);
+
+/* ---------------------------------------------------------------------------
+ * x11.c
+ * ---------------------------------------------------------------------------*/
+
+int ds_x11_daemon_start(struct ds_config *cfg);
+void ds_x11_daemon_stop(struct ds_config *cfg);
+int ds_setup_x11_socket(struct ds_config *cfg);
+
+/* ---------------------------------------------------------------------------
+ * virgl-android.c
+ * ---------------------------------------------------------------------------*/
+
+int ds_virgl_daemon_start(struct ds_config *cfg);
+void ds_virgl_daemon_stop(struct ds_config *cfg);
+int ds_setup_virgl_socket(struct ds_config *cfg);
+int check_virgl_needs(void);
+
+/* ---------------------------------------------------------------------------
+ * pulseaudio-android.c
+ * ---------------------------------------------------------------------------*/
+
+int ds_pulse_daemon_start(struct ds_config *cfg);
+void ds_pulse_daemon_stop(struct ds_config *cfg);
+int ds_setup_pulse_socket(struct ds_config *cfg);
+int check_pulse_needs(void);
 
 /* ---------------------------------------------------------------------------
  * network.c
@@ -697,6 +786,7 @@ int sync_pidfile(const char *src_pidfile, const char *name);
 int show_containers(struct ds_config *cfg);
 int scan_containers(void);
 int check_selinux_permissive_needs(void);
+int check_x11_needs(void);
 void write_plain_env_file(const char *src, const char *dst);
 
 /* ---------------------------------------------------------------------------
@@ -722,6 +812,8 @@ void parse_env_file_to_config(const char *path, struct ds_config *cfg);
 int is_valid_container_pid(pid_t pid);
 int start_rootfs(struct ds_config *cfg);
 int stop_rootfs(struct ds_config *cfg, int skip_unmount);
+int stop_rootfs_with_timeout(struct ds_config *cfg, int skip_unmount,
+                             int timeout_seconds);
 int enter_namespace(pid_t pid, struct ds_config *cfg);
 int enter_rootfs(struct ds_config *cfg, const char *user);
 int run_in_rootfs(struct ds_config *cfg, int argc, char **argv,
@@ -729,6 +821,7 @@ int run_in_rootfs(struct ds_config *cfg, int argc, char **argv,
 int show_info(struct ds_config *cfg, int trust_cfg_pid);
 int show_container_usage(struct ds_config *cfg);
 int restart_rootfs(struct ds_config *cfg);
+int restart_rootfs_with_timeout(struct ds_config *cfg, int timeout_seconds);
 
 /* ---------------------------------------------------------------------------
  * documentation.c

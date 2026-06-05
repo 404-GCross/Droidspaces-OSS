@@ -11,6 +11,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -95,6 +96,10 @@ fun EditContainerScreen(
     var enableHwAccess by remember { mutableStateOf(container.enableHwAccess) }
     var enableGpuMode by remember { mutableStateOf(container.enableGpuMode) }
     var enableTermuxX11 by remember { mutableStateOf(container.enableTermuxX11) }
+    var tx11ExtraFlags by remember { mutableStateOf(container.tx11ExtraFlags) }
+    var enableVirgl by remember { mutableStateOf(container.enableVirgl) }
+    var virglExtraFlags by remember { mutableStateOf(container.virglExtraFlags) }
+    var enablePulseaudio by remember { mutableStateOf(container.enablePulseaudio) }
     var selinuxPermissive by remember { mutableStateOf(container.selinuxPermissive) }
     var volatileMode by remember { mutableStateOf(container.volatileMode) }
     var bindMounts by remember { mutableStateOf(container.bindMounts) }
@@ -117,6 +122,10 @@ fun EditContainerScreen(
     var savedEnableHwAccess by remember { mutableStateOf(container.enableHwAccess) }
     var savedEnableGpuMode by remember { mutableStateOf(container.enableGpuMode) }
     var savedEnableTermuxX11 by remember { mutableStateOf(container.enableTermuxX11) }
+    var savedTx11ExtraFlags by remember { mutableStateOf(container.tx11ExtraFlags) }
+    var savedEnableVirgl by remember { mutableStateOf(container.enableVirgl) }
+    var savedVirglExtraFlags by remember { mutableStateOf(container.virglExtraFlags) }
+    var savedEnablePulseaudio by remember { mutableStateOf(container.enablePulseaudio) }
     var savedSelinuxPermissive by remember { mutableStateOf(container.selinuxPermissive) }
     var savedVolatileMode by remember { mutableStateOf(container.volatileMode) }
     var savedBindMounts by remember { mutableStateOf(container.bindMounts) }
@@ -151,6 +160,10 @@ fun EditContainerScreen(
             enableHwAccess != savedEnableHwAccess ||
             enableGpuMode != savedEnableGpuMode ||
             enableTermuxX11 != savedEnableTermuxX11 ||
+            tx11ExtraFlags != savedTx11ExtraFlags ||
+            enableVirgl != savedEnableVirgl ||
+            virglExtraFlags != savedVirglExtraFlags ||
+            enablePulseaudio != savedEnablePulseaudio ||
             selinuxPermissive != savedSelinuxPermissive ||
             volatileMode != savedVolatileMode ||
             bindMounts != savedBindMounts ||
@@ -191,6 +204,10 @@ fun EditContainerScreen(
                     enableHwAccess = enableHwAccess,
                     enableGpuMode = enableGpuMode,
                     enableTermuxX11 = enableTermuxX11,
+                    tx11ExtraFlags = tx11ExtraFlags,
+                    enableVirgl = enableVirgl,
+                    virglExtraFlags = virglExtraFlags,
+                    enablePulseaudio = enablePulseaudio,
                     selinuxPermissive = selinuxPermissive,
                     volatileMode = volatileMode,
                     bindMounts = bindMounts,
@@ -222,6 +239,10 @@ fun EditContainerScreen(
                         savedEnableHwAccess = enableHwAccess
                         savedEnableGpuMode = enableGpuMode
                         savedEnableTermuxX11 = enableTermuxX11
+                        savedTx11ExtraFlags = tx11ExtraFlags
+                        savedEnableVirgl = enableVirgl
+                        savedVirglExtraFlags = virglExtraFlags
+                        savedEnablePulseaudio = enablePulseaudio
                         savedSelinuxPermissive = selinuxPermissive
                         savedVolatileMode = volatileMode
                         savedBindMounts = bindMounts
@@ -857,6 +878,30 @@ fun EditContainerScreen(
                 enabled = true
             )
 
+            ToggleCard(
+                icon = Icons.Default.Layers,
+                title = context.getString(R.string.enable_virgl),
+                description = context.getString(R.string.enable_virgl_description),
+                checked = enableVirgl,
+                onCheckedChange = {
+                    clearFocus()
+                    enableVirgl = it
+                },
+                enabled = true
+            )
+
+            ToggleCard(
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
+                title = context.getString(R.string.enable_pulseaudio),
+                description = context.getString(R.string.enable_pulseaudio_description),
+                checked = enablePulseaudio,
+                onCheckedChange = {
+                    clearFocus()
+                    enablePulseaudio = it
+                },
+                enabled = true
+            )
+
             Text(
                 text = context.getString(R.string.cat_security),
                 style = MaterialTheme.typography.titleMedium,
@@ -1017,6 +1062,66 @@ fun EditContainerScreen(
                     Icon(Icons.Default.Terminal, contentDescription = null)
                 }
             )
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = enableTermuxX11,
+                enter = androidx.compose.animation.expandVertically(
+                    animationSpec = tween(durationMillis = 300)
+                ) + androidx.compose.animation.fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = androidx.compose.animation.shrinkVertically(
+                    animationSpec = tween(durationMillis = 300)
+                ) + androidx.compose.animation.fadeOut(animationSpec = tween(durationMillis = 300))
+            ) {
+                OutlinedTextField(
+                    value = tx11ExtraFlags,
+                    onValueChange = { tx11ExtraFlags = it },
+                    label = { Text(context.getString(R.string.tx11_extra_flags_label)) },
+                    placeholder = { Text(context.getString(R.string.tx11_extra_flags_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.ic_x11),
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                )
+            }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = enableVirgl,
+                enter = androidx.compose.animation.expandVertically(
+                    animationSpec = tween(durationMillis = 300)
+                ) + androidx.compose.animation.fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = androidx.compose.animation.shrinkVertically(
+                    animationSpec = tween(durationMillis = 300)
+                ) + androidx.compose.animation.fadeOut(animationSpec = tween(durationMillis = 300))
+            ) {
+                OutlinedTextField(
+                    value = virglExtraFlags,
+                    onValueChange = { virglExtraFlags = it },
+                    label = { Text(context.getString(R.string.virgl_extra_flags_label)) },
+                    placeholder = { Text(context.getString(R.string.virgl_extra_flags_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    leadingIcon = { Icon(Icons.Default.Layers, contentDescription = null) }
+                )
+            }
 
             // Bind Mounts Section
             Row(

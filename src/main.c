@@ -71,7 +71,13 @@ void print_usage(void) {
       "                            Mount Android internal storage (/sdcard)\n"
       "  -H, --hw-access           Enable direct hardware access (/dev nodes)\n"
       "      --gpu                 Enable GPU acceleration nodes\n"
-      "  -X, --termux-x11          Configure Termux-X11 display support\n\n"
+      "  -X, --termux-x11          Configure Termux-X11 display support\n"
+      "      --tx11-flags=\"FLAGS\"    Extra flags passed to termux-x11\n"
+      "      --virgl               Configure VirGL 3D acceleration support\n"
+      "      --virgl-flags=\"FLAGS\"   Extra flags passed to "
+      "virgl_test_server_android\n"
+      "      --pulse-audio         Configure PulseAudio sound server "
+      "support\n\n"
 
       C_BOLD "Options (Security & Boot):" C_RESET "\n"
       "  -P, --selinux-permissive  Set host SELinux to permissive mode\n"
@@ -321,6 +327,7 @@ static void enforce_nat_safety(struct ds_config *cfg, int argc, char **argv) {
 int main(int argc, char **argv) {
   int ret = 0;
   struct ds_config cfg;
+  char raw_names[4096] = "";
   /* CRITICAL: Zero all fields to avoid garbage pointer in dynamic arrays */
   memset(&cfg, 0, sizeof(cfg));
 
@@ -339,6 +346,7 @@ int main(int argc, char **argv) {
       {"foreground", no_argument, 0, 'f'},
       {"hw-access", no_argument, 0, 'H'},
       {"termux-x11", no_argument, 0, 'X'},
+      {"tx11-flags", required_argument, 0, 271},
       {"disable-ipv6", no_argument, 0, 'I'},
       {"enable-android-storage", no_argument, 0, 'S'},
       {"selinux-permissive", no_argument, 0, 'P'},
@@ -357,6 +365,9 @@ int main(int argc, char **argv) {
       {"privileged", required_argument, 0, 264},
       {"nat-ip", required_argument, 0, 262},
       {"gpu", no_argument, 0, 263},
+      {"virgl", no_argument, 0, 270},
+      {"virgl-flags", required_argument, 0, 272},
+      {"pulse-audio", no_argument, 0, 273},
       {"reset", no_argument, 0, 256},
       {"format", no_argument, 0, 265},
       {"memory", required_argument, 0, 266},
@@ -407,7 +418,7 @@ int main(int argc, char **argv) {
       safe_strncpy(cfg.config_file, optarg, sizeof(cfg.config_file));
       cfg.config_file_specified = 1;
     } else if (opt == 'n') {
-      if (reject_container_name(optarg) < 0) {
+      if (parse_and_validate_names(optarg, raw_names, sizeof(raw_names)) < 0) {
         ret = 1;
         goto cleanup;
       }
@@ -515,8 +526,8 @@ int main(int argc, char **argv) {
   }
 
   /* If we have a name but haven't successfully loaded a config file yet, load
-   * by name. */
-  if (!loaded && cfg.container_name[0] != '\0') {
+   * by name. Skip for comma-separated names - ds_multi_* handles those. */
+  if (!loaded && cfg.container_name[0] != '\0' && !strchr(raw_names, ',')) {
     if (ds_config_load_by_name(cfg.container_name, &cfg) < 0) {
       /* If loading by name fails and it's a stateful command, maybe the
        * container was moved or renamed. Perform a recovery scan of running
@@ -562,7 +573,7 @@ int main(int argc, char **argv) {
       cfg.is_img_mount = 1;
       break;
     case 'n':
-      if (reject_container_name(optarg) < 0) {
+      if (parse_and_validate_names(optarg, raw_names, sizeof(raw_names)) < 0) {
         ret = 1;
         goto cleanup;
       }
@@ -588,6 +599,20 @@ int main(int argc, char **argv) {
       break;
     case 'X':
       cfg.termux_x11 = 1;
+      break;
+    case 271:
+      free(cfg.tx11_extra_flags);
+      cfg.tx11_extra_flags = optarg[0] ? strdup(optarg) : NULL;
+      break;
+    case 270:
+      cfg.virgl = 1;
+      break;
+    case 272:
+      free(cfg.virgl_extra_flags);
+      cfg.virgl_extra_flags = optarg[0] ? strdup(optarg) : NULL;
+      break;
+    case 273:
+      cfg.pulseaudio = 1;
       break;
     case 'I':
       cfg.disable_ipv6 = 1;
@@ -1005,24 +1030,6 @@ int main(int argc, char **argv) {
                  sizeof(ds_log_container_name));
   }
 
-  /* Prevent Termux suicide when --termux-x11 is used inside Termux */
-  if (is_android() && cfg.termux_x11 && is_running_in_termux() &&
-      (strcmp(cmd, "start") == 0 || strcmp(cmd, "restart") == 0)) {
-    printf("\n" C_RED C_BOLD "[ FATAL: Termux X11 Conflict ]" C_RESET "\n\n");
-    ds_error(
-        "Droidspaces cannot enable --termux-x11 when running inside Termux.");
-    ds_log("Why? Setting up Termux X11 requires restarting the Termux app,");
-    ds_log(
-        "which would terminate this terminal session and Droidspaces itself.");
-    printf("\n" C_CYAN
-           "To use X11 support, please start this container from:" C_RESET
-           "\n");
-    printf("  1. The Droidspaces Android App\n");
-    printf("  2. Using an another Terminal (adb shell, Reterminal, etc)\n\n");
-    ret = 1;
-    goto cleanup;
-  }
-
   /* Basic info commands */
   if (strcmp(cmd, "check") == 0) {
     ret = check_requirements_detailed();
@@ -1069,8 +1076,13 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
 
-  /* Lifestyle commands */
+  /* start/restart: single container only */
   if (strcmp(cmd, "start") == 0) {
+    if (strchr(raw_names, ',')) {
+      ds_error("start does not support multiple containers.");
+      ret = 1;
+      goto cleanup;
+    }
     if (validate_configuration_cli(&cfg) < 0) {
       ret = 1;
       goto cleanup;
@@ -1084,43 +1096,40 @@ int main(int argc, char **argv) {
       goto cleanup;
     }
     enforce_nat_safety(&cfg, argc, argv);
-
     print_ds_banner();
     print_privileged_warning(cfg.privileged_mask);
-
-    if ((cfg.privileged_mask & DS_PRIV_NOSEC) && cfg.block_nested_ns) {
+    if ((cfg.privileged_mask & DS_PRIV_NOSEC) && cfg.block_nested_ns)
       ds_warn("--privileged=noseccomp is active: --block-nested-namespaces "
               "is now a NO-OP.");
-    }
-
     ds_cgroup_host_bootstrap(cfg.force_cgroupv1);
-    if (cfg.container_name[0] == '\0' && cfg.rootfs_path[0]) {
+    if (cfg.container_name[0] == '\0' && cfg.rootfs_path[0])
       generate_container_name(cfg.rootfs_path, cfg.container_name,
                               sizeof(cfg.container_name));
-    }
     ret = start_rootfs(&cfg);
     goto cleanup;
   }
 
   if (strcmp(cmd, "stop") == 0) {
-    ret = stop_rootfs(&cfg, 0);
+    ret = strchr(raw_names, ',') ? ds_multi_stop(raw_names)
+                                 : stop_rootfs(&cfg, 0);
     goto cleanup;
   }
 
   if (strcmp(cmd, "restart") == 0) {
+    if (strchr(raw_names, ',')) {
+      ds_error("restart does not support multiple containers.");
+      ret = 1;
+      goto cleanup;
+    }
     if (check_requirements_hw(cfg.hw_access) < 0) {
       ret = 1;
       goto cleanup;
     }
     enforce_nat_safety(&cfg, argc, argv);
-
     print_privileged_warning(cfg.privileged_mask);
-
-    if ((cfg.privileged_mask & DS_PRIV_NOSEC) && cfg.block_nested_ns) {
+    if ((cfg.privileged_mask & DS_PRIV_NOSEC) && cfg.block_nested_ns)
       ds_warn("--privileged=noseccomp is active: --block-nested-namespaces "
               "is now a NO-OP.");
-    }
-
     ds_cgroup_host_bootstrap(cfg.force_cgroupv1);
     ret = restart_rootfs(&cfg);
     goto cleanup;
@@ -1193,5 +1202,7 @@ cleanup:
   free_config_unknown_lines(&cfg);
   free_config_env_vars(&cfg);
   free_config_binds(&cfg);
+  free(cfg.tx11_extra_flags);
+  free(cfg.virgl_extra_flags);
   return ret;
 }
