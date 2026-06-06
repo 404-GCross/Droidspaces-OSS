@@ -37,6 +37,41 @@ static int pa_resolve_termux_uid(void) {
   return uid;
 }
 
+/*
+ * Probe for libskcodec.so (needed by libskandroidcodec.so on Samsung One UI
+ * 6.1+). lib64 takes priority; fall back to lib; skip if absent.
+ */
+#define SKCODEC_LIB64 "/system/lib64/libskcodec.so"
+#define SKCODEC_LIB "/system/lib/libskcodec.so"
+
+static const char *find_skcodec(void) {
+  if (access(SKCODEC_LIB64, F_OK) == 0)
+    return SKCODEC_LIB64;
+  if (access(SKCODEC_LIB, F_OK) == 0)
+    return SKCODEC_LIB;
+  return NULL;
+}
+
+/*
+ * Inject libskcodec.so into LD_PRELOAD so the OpenSL ES module can dlopen
+ * libskandroidcodec.so which has it as a hidden dependency on Samsung firmware.
+ */
+static void inject_skcodec_preload(void) {
+  const char *lib = find_skcodec();
+  if (!lib)
+    return;
+
+  const char *existing = getenv("LD_PRELOAD");
+  if (existing && existing[0]) {
+    char buf[PATH_MAX * 2];
+    snprintf(buf, sizeof(buf), "%s:%s", lib, existing);
+    setenv("LD_PRELOAD", buf, 1);
+  } else {
+    setenv("LD_PRELOAD", lib, 1);
+  }
+  ds_log("[PulseAudio] LD_PRELOAD += %s (Samsung OpenSL ES fix)", lib);
+}
+
 /* ---- daemon child ----------------------------------------------------- */
 
 struct pulse_args {
@@ -82,6 +117,10 @@ static void pulse_child_wrapper(int ready_fd, void *user_data) {
     }
     _exit(1);
   }
+
+  /* Inject libskcodec.so if present -- fixes OpenSL ES on Samsung One UI 6.1+
+   */
+  inject_skcodec_preload();
 
   fprintf(stdout, "[PulseAudio] uid=%d socket=%s\n", (int)getuid(),
           TX11_PULSE_SOCKET);

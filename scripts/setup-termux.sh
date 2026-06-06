@@ -10,6 +10,7 @@ AAUDIO_LINE="load-module module-aaudio-sink"
 ALWAYS_LINE="load-module module-always-sink"
 SLES_LINE="load-module module-sles-sink"
 CK_LINE="load-module module-console-kit"
+SIDLE_LINE="load-module module-suspend-on-idle"
 
 BOLD="\033[1m"
 GREEN="\033[1;32m"
@@ -36,6 +37,9 @@ DEBIAN_FRONTEND=noninteractive pkg install -y -o Dpkg::Options::="--force-confol
 log "Installing Termux:X11, VirGL and PulseAudio..."
 DEBIAN_FRONTEND=noninteractive pkg install -y -o Dpkg::Options::="--force-confold" pulseaudio termux-x11 virglrenderer-android
 
+log "Installing libandroid-stub (OpenSL ES HAL fix)..."
+DEBIAN_FRONTEND=noninteractive pkg install -y -o Dpkg::Options::="--force-confold" libandroid-stub
+
 log "Patching $DEFAULT_PA..."
 
 if [ ! -f "$DEFAULT_PA" ]; then
@@ -53,6 +57,12 @@ fi
 if grep -q "^${CK_LINE}" "$DEFAULT_PA"; then
     sed -i "s|^${CK_LINE}|#${CK_LINE}|" "$DEFAULT_PA"
     detail "Commented out $CK_LINE"
+fi
+
+# Comment out module-suspend-on-idle (causes PA futex deadlock on audio device changes)
+if grep -q "^${SIDLE_LINE}" "$DEFAULT_PA"; then
+    sed -i "s|^${SIDLE_LINE}|#${SIDLE_LINE}|" "$DEFAULT_PA"
+    detail "Commented out $SIDLE_LINE"
 fi
 
 # Check if already patched (aaudio appears before always-sink)
