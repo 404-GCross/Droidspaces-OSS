@@ -1068,8 +1068,16 @@ int ds_nl_get_android_default(ds_nl_ctx_t *ctx, char *ifname_out,
         }
       }
 
-      /* The netd default-network signature: fwmark 0x0/0xffff iif lo */
-      if (!have_mark || !have_mask || fwmark != 0 || fwmask != 0xffff)
+      /* The netd default-network signature: fwmark 0x0/0xffff iif lo.
+       *
+       * Kernel quirk: fib_nl_fill_rule() only emits FRA_FWMARK when the
+       * mark is non-zero, so for this rule (mark 0x0) the attribute is
+       * absent from the dump and only FRA_FWMASK (0xffff) is present.
+       * An absent FRA_FWMARK therefore means mark == 0 - exactly what
+       * `ip rule show` assumes when it prints "fwmark 0x0/0xffff". */
+      if (!have_mask || fwmask != 0xffff)
+        continue;
+      if (have_mark && fwmark != 0)
         continue;
       if (strcmp(iifname, "lo") != 0)
         continue;
