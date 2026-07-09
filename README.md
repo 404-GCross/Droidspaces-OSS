@@ -83,6 +83,7 @@ Everything below is also on the [documentation site](https://www.droidspaces.org
 | [Linux CLI](Documentation/Linux-CLI.md) | Every command, flag and config file key. |
 | [Networking from zero](Documentation/Networking-From-Zero.md) | How the network modes work, from IP addresses up to an OpenWrt gateway. |
 | [Display, audio and desktop](Documentation/Graphics-and-Audio.md) | GPU acceleration, sound and a desktop environment on Android and Linux. |
+| [Anland](Documentation/Anland.md) | A Wayland desktop on Android through the Anland app, for KDE Plasma and other Wayland compositors. |
 | [Kernel configuration](Documentation/Kernel-Configuration.md) | Building an Android kernel with Droidspaces support. |
 | [Recipes](Documentation/Cool-things-you-can-do.md) | A phone as a home server with Tailscale, Docker inside a container, and more. |
 | [Troubleshooting](Documentation/Troubleshooting.md) | Symptoms, causes and fixes. |
