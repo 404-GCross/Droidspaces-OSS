@@ -14,10 +14,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- Package visibility: the config form greys out the Termux-backed toggles when these are missing -->
+    <!-- Package visibility: the config form greys out the Termux-backed toggles when
+         those are missing, and the "Launch Anland Window" action starts the consumer app. -->
     <queries>
         <package android:name="com.termux" />
         <package android:name="com.termux.x11" />
+        <package android:name="com.anland.consumer" />
     </queries>
 
     <application
