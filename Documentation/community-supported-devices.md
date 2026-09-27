@@ -1,8 +1,8 @@
 <!--
-title: Community-Supported Devices
+title: Community-supported devices
 section: Reference
 order: 3
-desc: Community-maintained compatibility list of Android devices verified to run Droidspaces.
+desc: Android devices that community members have run Droidspaces on, with kernel sources and downloads.
 keywords: droidspaces, supported, devices, android, device, compatibility, kernel, support, list, hardware
 -->
 
@@ -10,19 +10,19 @@ keywords: droidspaces, supported, devices, android, device, compatibility, kerne
 
 > [!NOTE]
 >
-> If you want to add your own Droidspaces kernel to this table, check out the [Contribution guidelines](#contribution-guidelines) section.
+> To add your own Droidspaces kernel to these tables, follow the [contribution guidelines](#contribution-guidelines).
 
 > [!WARNING]
 >
-> Flashing a custom kernel requires an unlocked bootloader. The Droidspaces developers are not responsible for any bricked devices, data loss, or hardware failure resulting from kernel installation.
+> Flashing a custom kernel requires an unlocked bootloader. The Droidspaces developers are not responsible for bricked devices, data loss or hardware failure caused by installing a kernel.
 >
-> This list is provided solely to help you locate device-specific source code.
+> This list exists only to help you find device-specific source code.
 >
-> These repositories have not been deeply audited or reviewed by the Droidspaces team. Proceed at your own risk.
+> The Droidspaces team has not audited or reviewed these repositories in depth. Use them at your own risk.
 
-This document is a community-maintained compatibility list for Android devices known to run Droidspaces successfully. It is intended to help people choose phones for self-hosting, especially when buying second-hand hardware.
+This is a community-maintained list of Android devices known to run Droidspaces. It is meant to help you choose a phone for self-hosting, especially when buying second-hand hardware.
 
-## Non-GKI Devices (Kernel 4.19 and lower)
+## Non-GKI devices (kernel 4.19 and lower)
 
 | Device Name | Model Number | Android / ROM | Baseband / Build | Kernel version | Root Method | Kernel Source | Download Link | Droidspaces Mode | GPU Acceleration | Status | Maintainer | Additional notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -37,7 +37,7 @@ This document is a community-maintained compatibility list for Android devices k
 | **Galaxy S8+ (Exynos)** | SM-G955F | LineageOS 18.1 - Android 11 | `RQ3A.211001.001` | `4.4.111` | Magisk | [Source](https://github.com/tingao/dream2lte-droidspaces-kernel) | [Download](https://github.com/tingao/dream2lte-droidspaces-kernel/releases/download/v1.0.0/dream2lte-lineage18.1-droidspaces-boot.img) | Daemon | Untested | Working | [@tingao](https://github.com/tingao) | Replaces BOOT partition only, flash via dd from a rooted shell. Magisk needs Daemon Mode enabled in Droidspaces settings plus a reboot. Tested against lineage-18.1-20250628-UNOFFICIAL-dream2lte specifically. GPU acceleration not tested. |
 | **moto g(50) 5G** | XT2149-1 | Android 12 (stock Motorola) | `S1RSS32.38-20-7-16` | `4.14.186` | KernelSU-Next v3.4.0 | [Source](https://github.com/tingao/saipan-droidspaces-kernel) | [Download](https://github.com/tingao/saipan-droidspaces-kernel/releases/download/v1.1.0/boot-saipan-ksu-cgroupv2-mem.img) | Daemon | Untested | Working | [@tingao](https://github.com/tingao) | MediaTek MT6833 (Dimensity 700). Replaces the BOOT partition only, flash with `fastboot flash boot`. The container runs on **cgroup v2**, so every process in it lands in its own host-side subtree and a memory cap can actually bind; needs `--privileged=noseccomp` and a systemd drop-in replacing `dockerd -H fd://` with a plain unix socket, and on v2 `cgroup-parent` has to come out of `daemon.json` or dockerd refuses to start. The handset's 17 prebuilt vendor modules were built from a source branch one patch level newer than the only one Motorola published, so the kernel warns on a symbol-CRC mismatch instead of rejecting every module. GPU acceleration untested. |
 
-## GKI Devices (Kernel 5.4 and up)
+## GKI devices (kernel 5.4 and up)
 
 | Device Name | Model Number | Android / ROM | Kernel version | Root Method | Kernel Source | Download Link | Droidspaces Mode | GPU Acceleration | Status | Maintainer | Additional notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -253,17 +253,17 @@ This document is a community-maintained compatibility list for Android devices k
 
 ## Contribution guidelines
 
-To keep this list useful and reliable, please follow these rules when adding or updating entries:
+When you add or update an entry, follow these rules so the list stays usable:
 
 - Add one device per row.
 - Fill every column completely.
 - Contributions should be honest, complete, and verifiable.
-- Provide a direct downloadable kernel archive (`zip`, `tar`, `img`) or a downloadable kernel package; inexperienced users should not need to compile the kernel themselves.
+- Provide a direct downloadable kernel archive (`zip`, `tar`, `img`) or a downloadable kernel package. Inexperienced users should not have to compile the kernel themselves.
 - Provide the exact source code link for your Droidspaces kernel in the Kernel Source column.
-- Document the exact `Baseband / Build` string (Mandatory for Non-GKI devices only).
-- Specify the `Root Method` used, such as `Magisk`, `KernelSU`, `APatch` or `none`.(Compile only the kernel without adding any implementation methods; you need to patch `init_boot` yourself to achieve root.)
+- Document the exact `Baseband / Build` string (mandatory for non-GKI devices only).
+- Specify the `Root Method` used, such as `Magisk`, `KernelSU`, `APatch` or `none` (`none` means the kernel was built without a root implementation, and you patch `init_boot` yourself to get root).
 - Set `Status` to one of: `Working`, `Partial`, or `Unusable`.
-- In Notes, include known quirks and issues, additional setup steps, and recommended workloads.
+- In the notes column, list known quirks and issues, extra setup steps and recommended workloads.
 - Submit contributions through GitHub pull requests.
-- Update entries when status changes, and keep the information current.
-- Match the entry to the kernel list in the table. 5.4 devices go in the 5.4 section, 5.10 devices go into the 5.10 section, and so forth. This helps maintain readability and reduce the cost of maintaining the list.
+- Update your entry when its status changes, and keep it current.
+- Put the entry in the table that matches its kernel version: 5.4 devices in the 5.4 section, 5.10 devices in the 5.10 section, and so on. This keeps the list readable and cheaper to maintain.
