@@ -408,14 +408,8 @@
     <string name="repo_notification_description">Unduhan rootfs Droidspaces</string>
     <string name="repo_error_no_assets">Tidak ditemukan rootfs tarball pada rilis terbaru</string>
     <string name="repo_dl_error_unknown">Kesalahan tidak diketahui</string>
-    <string name="repo_dl_error_cannot_resume">Tidak dapat melanjutkan unduhan</string>
-    <string name="repo_dl_error_device_not_found">Penyimpanan tidak ditemukan</string>
-    <string name="repo_dl_error_file_exists">Berkas sudah ada</string>
     <string name="repo_dl_error_file_error">Kesalahan sistem berkas</string>
     <string name="repo_dl_error_http_data">Kesalahan data HTTP</string>
-    <string name="repo_dl_error_no_space">Penyimpanan tidak mencukupi</string>
-    <string name="repo_dl_error_too_many_redirects">Terlalu banyak pengalihan</string>
-    <string name="repo_dl_error_unhandled_http">Respons HTTP tidak terduga</string>
     <string name="repo_dl_error_not_found">Berkas tidak ditemukan (404)</string>
     <string name="repo_dl_error_code">Kode kesalahan %1$d</string>
     <string name="repo_status_ready">SIAP</string>

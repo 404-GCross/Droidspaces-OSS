@@ -412,14 +412,8 @@
     <string name="repo_notification_description">下载 Droidspaces 根文件系统</string>
     <string name="repo_error_no_assets">最新发布版中未找到根文件系统压缩包</string>
     <string name="repo_dl_error_unknown">未知错误</string>
-    <string name="repo_dl_error_cannot_resume">无法恢复下载</string>
-    <string name="repo_dl_error_device_not_found">未找到存储</string>
-    <string name="repo_dl_error_file_exists">文件已经存在</string>
     <string name="repo_dl_error_file_error">文件系统错误</string>
     <string name="repo_dl_error_http_data">HTTP 数据错误</string>
-    <string name="repo_dl_error_no_space">存储空间不足</string>
-    <string name="repo_dl_error_too_many_redirects">重定向次数过多</string>
-    <string name="repo_dl_error_unhandled_http">HTTP 响应异常</string>
     <string name="repo_dl_error_not_found">文件不存在（404）</string>
     <string name="repo_dl_error_code">错误码 ：%1$d</string>
     <string name="repo_status_ready">就绪</string>

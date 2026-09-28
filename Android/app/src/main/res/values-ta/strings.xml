@@ -10,7 +10,6 @@
     <string name="selinux_permissive_option">SELinux இசைவு</string>
     <string name="no_unknown_services">தெரியாத நிலையில் சேவைகள் இல்லை</string>
     <string name="extracting_module_files">தொகுதிக் கோப்புகளைப் பிரித்தெடுக்கிறது...</string>
-    <string name="repo_dl_error_cannot_resume">பதிவிறக்கத்தை மீண்டும் தொடங்க முடியாது</string>
     <string name="tarball_label">தார்பால்</string>
     <string name="ram_usage_label">ரேம் பயன்பாடு</string>
     <string name="optional_symmetric_hint">விருப்பத்தேர்வு (எ.கா. 8080 அல்லது 1000-2000)</string>
@@ -55,7 +54,6 @@
     <string name="feat_containers_title">உண்மையான லினக்ச் கொள்கலன்கள்</string>
     <string name="sparse_images_description">ஒரு ச்பேர்ச் படமானது ஒரு பிரத்யேக ext4 கோப்பு முறைமை படக் கோப்பை உருவாக்குகிறது, அது ஒரு லூப் சாதனமாக ஏற்றப்பட்டு, சிறந்த தனிமைப்படுத்தல் மற்றும் இணக்கத்தன்மையை வழங்குகிறது.</string>
     <string name="installing_binary">பைனரியை நிறுவுகிறது: %1$s</string>
-    <string name="repo_dl_error_no_space">போதிய சேமிப்பு இல்லை</string>
     <string name="selinux_permissive_description">SELinux அனுமதியை அமைக்கவும்</string>
     <string name="get_started">தொடங்குங்கள்</string>
     <string name="open_terminal">முனையத்தைத் திறக்கவும்</string>
@@ -71,7 +69,6 @@
     <string name="daemon_mode">டீமான் பயன்முறை</string>
     <string name="privileged_noseccomp_desc">Seccomp syscall வடிகட்டலை முடக்கவும். இது, உள்ளமை சாண்ட்பாக்சிங்கிற்கு (Bubblewrap, Flatpak) கண்டிப்பாகத் தேவைப்படும் சலுகையற்ற பயனர் பெயர்வெளிகள் போன்ற மேம்பட்ட கர்னல் அம்சங்களை செயல்படுத்துகிறது மற்றும் மரத்திற்கு வெளியே உள்ள கர்னல் தொகுதிகளை ஏற்றவும் அனுமதிக்கிறது.</string>
     <string name="kernel">கர்னல்</string>
-    <string name="repo_dl_error_file_exists">கோப்பு ஏற்கனவே உள்ளது</string>
     <string name="failed_to_action">%1$s %2$s இல் தோல்வியடைந்தது</string>
     <string name="container_information">கொள்கலன் செய்தி</string>
     <string name="edit_container_title">கொள்கலனைத் திருத்து: %1$s</string>
@@ -188,7 +185,6 @@
     <string name="hostname">புரவலன்பெயர்</string>
     <string name="uninstalling_container">நிறுவல் நீக்குகிறது...</string>
     <string name="hardware_access">வன்பொருள் அணுகல்</string>
-    <string name="repo_dl_error_device_not_found">சேமிப்பிடம் கிடைக்கவில்லை</string>
     <string name="back">பின்</string>
     <string name="start_container_first">அதை இங்கே பார்க்க முதலில் ஒரு கொள்கலனைத் தொடங்கவும்</string>
     <string name="daemon_mode_description">Magisk/APatch, GrapheneOS, போன்றவற்றிலிருந்து seccomp பிளாக்சைத் தவிர்க்க, Droidspaces ஒரு நிலையான கணினி-நிலை டீமானாக இயக்கவும். இது பயனர் இடத்திலிருந்து கட்டளைகளைப் பெற்று இயக்குவதன் மூலம் உயர்-சலுகை செயல்பாடுகளை செயல்படுத்துகிறது (மறுதொடக்கம் தேவை).</string>
@@ -261,7 +257,6 @@
     <string name="feat_autoboot_desc">திரை பூட்டப்பட்டிருந்தாலும், தரவு குறியாக்கம் செய்யப்பட்டிருந்தாலும், பூட்டில் கொள்கலன்களைத் தானாகத் தொடங்கவும்.</string>
     <string name="gateway_settings_description">இந்த கொள்கலனை திசைவியாக செயல்படும் மற்றொரு கொள்கலன் வழியாக இயக்கவும் (எ.கா. OpenWRT). அந்த நுழைவாயில் முதலில் இயங்க வேண்டும்.</string>
     <string name="environment_variables">சுற்றுச்சூழல் மாறிகள்</string>
-    <string name="repo_dl_error_unhandled_http">எதிர்பாராத HTTP பதில்</string>
     <string name="notification_wakelock_off">வேக் லாக்: ஆஃப்</string>
     <string name="empty_directory">வெற்று அடைவு</string>
     <string name="no_static_services">நிலையான சேவைகள் இல்லை</string>
@@ -301,7 +296,6 @@
     <string name="feat_isolation_title">முழுமையான தனிமைப்படுத்தல்</string>
     <string name="repo_title">ரூட்ஃப்ச் களஞ்சியம்</string>
     <string name="privileged_mode">சலுகை பெற்ற பயன்முறை</string>
-    <string name="repo_dl_error_too_many_redirects">பல வழிமாற்றுகள்</string>
     <string name="dns_servers_placeholder">எ.கா. 1.1.1.1,8.8.8.8 (விரும்பினால்)</string>
     <string name="backend_not_available_description">Droidspaces பின்தளம் நிறுவப்படவில்லை அல்லது சிதைக்கப்படவில்லை. முதலில் அதை நிறுவவும்.</string>
     <string name="status_running">ஓடுகிறது</string>

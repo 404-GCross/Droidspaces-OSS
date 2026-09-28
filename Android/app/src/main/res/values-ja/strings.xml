@@ -386,13 +386,8 @@
     <string name="repo_install">インストール</string>
     <string name="repo_retry">再試行</string>
     <string name="repo_dl_error_unknown">未知のエラー</string>
-    <string name="repo_dl_error_cannot_resume">ダウンロードを再開できません</string>
-    <string name="repo_dl_error_device_not_found">保存領域が見つかりません</string>
-    <string name="repo_dl_error_file_exists">ファイルはすでに存在します</string>
     <string name="repo_dl_error_file_error">ファイルシステム・エラー</string>
     <string name="repo_dl_error_http_data">HTTPデータ・エラー</string>
-    <string name="repo_dl_error_no_space">保存領域が不足しています</string>
-    <string name="repo_dl_error_too_many_redirects">リダイレクト回数が多すぎます</string>
     <string name="repo_dl_error_not_found">指定したファイルが存在しません (404)</string>
     <string name="repo_dl_error_code">エラーコード %1$d</string>
     <string name="repo_status_ready">準備完了</string>

@@ -420,12 +420,9 @@
     <string name="privileged_nomask_desc">Jail-Masken deaktivieren, um Schreibzugriff auf /proc und /sys zu ermöglichen. Hinweis: /sys bleibt schreibgeschützt, sofern nicht auch der Hardwarezugriff aktiviert ist.</string>
     <string name="privileged_nocaps_desc">Auf keinerlei Linux-Funktionen verzichten (vollständige Root-Rechte).</string>
     <string name="privileged_noseccomp_desc">Seccomp-Syscall-Filterung deaktivieren. Dadurch werden erweiterte Kernel-Funktionen wie nicht privilegierte Benutzernamensräume aktiviert, die für verschachtelte Sandboxing-Umgebungen (Bubblewrap, Flatpak) zwingend erforderlich sind, und es wird das Laden von Kernel-Modulen außerhalb des Kernel-Baums ermöglicht.</string>
-    <string name="repo_dl_error_cannot_resume">Download konnte nicht fortgesetzt werden</string>
     <string name="i_understand_caps">ICH WERDE KEINE FEHLER MELDEN</string>
-    <string name="repo_dl_error_no_space">Unzureichender Speicherplatz</string>
     <string name="hw_access_disclaimer">Ab Droidspaces v6.1.0 hat udevd direkten Zugriff auf die USB-, Block-, Eingabe-, TTY- und Netzwerk-Subsysteme. Dein Container kann Hardware nutzen, die Android gerade verwendet.\n\nWenn Ihre Tastatur, SD-Karte oder Ihr USB-Gerät nach dem Starten eines Containers unter Android nicht mehr funktioniert, handelt es sich dabei NICHT um einen Fehler. Der Container hat die Kontrolle übernommen. Sie haben um vollen Hardwarezugriff gebeten.\n\nMelden Sie KEINE Probleme, die durch Hardwarekonflikte oder Kernel-Panic während der Nutzung dieses Modus verursacht werden.</string>
     <string name="privileged_full_desc">Alle Berechtigungsflags auf einmal aktivieren.</string>
-    <string name="repo_dl_error_file_exists">Datei bereits vorhanden</string>
     <string name="privileged_warning_title">GEFÄHRLICHE EINSTELLUNGEN</string>
     <string name="repo_retry">Wiederholen</string>
     <string name="repo_notification_description">Droidspaces rootfs herunterladen</string>
@@ -435,14 +432,11 @@
     <string name="reboot_recommended">Ein Neustart wird empfohlen, um die SELinux-Regeln zu übernehmen und den Daemon beim Systemstart zu starten.</string>
     <string name="repo_dl_error_http_data">HTTP data error</string>
     <string name="repo_failed_to_load">Das Repository konnte nicht geladen werden</string>
-    <string name="repo_dl_error_device_not_found">Speicher nicht gefunden</string>
     <string name="privileged_shared_desc">Weitergabe von MS_SHARED-Einbindungen an den Host aktivieren.</string>
     <string name="repo_install">Installieren</string>
     <string name="repo_dl_error_file_error">Dateisystemfehler</string>
     <string name="repo_fab_label">Repository</string>
-    <string name="repo_dl_error_unhandled_http">Unerwartete HTTP-Antwort</string>
     <string name="repo_title">Rootfs Repository</string>
-    <string name="repo_dl_error_too_many_redirects">Zu viele Weiterleitungen</string>
     <string name="repo_dl_error_code">Fehlercode %1$d</string>
     <string name="repo_download">Herunterladen</string>
     <string name="repo_status_downloading">WIRD GELADEN</string>

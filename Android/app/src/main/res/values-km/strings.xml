@@ -412,14 +412,8 @@
     <string name="repo_notification_description">ទាញយក Droidspaces rootfs</string>
     <string name="repo_error_no_assets">រកមិនឃើញ rootfs tarballs នៅក្នុងការចេញផ្សាយចុងក្រោយបំផុតទេ</string>
     <string name="repo_dl_error_unknown">កំហុសមិនស្គាល់ ឬ មានកំហុសមិនស្គាល់អត្តសញ្ញាណ</string>
-    <string name="repo_dl_error_cannot_resume">មិនអាចបន្តការទាញយកបានទេ</string>
-    <string name="repo_dl_error_device_not_found">រកមិនឃើញទំហំផ្ទុកទិន្នន័យទេ</string>
-    <string name="repo_dl_error_file_exists">ឯកសារមានរួចហើយ</string>
     <string name="repo_dl_error_file_error">កំហុសប្រព័ន្ធឯកសារ</string>
     <string name="repo_dl_error_http_data">កំហុសទិន្នន័យ HTTP</string>
-    <string name="repo_dl_error_no_space">ទំហំផ្ទុកមិនគ្រប់គ្រាន់</string>
-    <string name="repo_dl_error_too_many_redirects">ការបញ្ជូនបន្តច្រើនដងពេក</string>
-    <string name="repo_dl_error_unhandled_http">ការឆ្លើយតប HTTP មិនរំពឹងទុក</string>
     <string name="repo_dl_error_not_found">រកមិនឃើញឯកសារ (404)</string>
     <string name="repo_dl_error_code">លេខកូដកំហុស %1$d</string>
     <string name="repo_status_ready">រួចរាល់</string>

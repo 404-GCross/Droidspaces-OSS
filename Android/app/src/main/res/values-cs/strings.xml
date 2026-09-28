@@ -464,14 +464,8 @@
     <string name="repo_notification_description">Stahování rootfs pro Droidspaces</string>
     <string name="repo_error_no_assets">V nejnovějším vydání nebyly nalezeny žádné archivy tar rootfs</string>
     <string name="repo_dl_error_unknown">Neznámá chyba</string>
-    <string name="repo_dl_error_cannot_resume">Ve stahování nelze pokračovat</string>
-    <string name="repo_dl_error_device_not_found">Úložiště nebylo nalezeno</string>
-    <string name="repo_dl_error_file_exists">Soubor již existuje</string>
     <string name="repo_dl_error_file_error">Chyba souborového systému</string>
     <string name="repo_dl_error_http_data">Chyba dat HTTP</string>
-    <string name="repo_dl_error_no_space">Nedostatek místa v úložišti</string>
-    <string name="repo_dl_error_too_many_redirects">Příliš mnoho přesměrování</string>
-    <string name="repo_dl_error_unhandled_http">Neočekávaná odpověď HTTP</string>
     <string name="repo_dl_error_not_found">Soubor nebyl nalezen (404)</string>
     <string name="repo_dl_error_code">Kód chyby %1$d</string>
     <string name="repo_status_ready">PŘIPRAVENO</string>
