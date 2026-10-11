@@ -224,6 +224,8 @@
     <string name="tx11_extra_flags_placeholder">e.g. -dpi 160 -force-sysvshm</string>
     <string name="enable_virgl">Configure VirGL 3D Acceleration</string>
     <string name="enable_virgl_description">Enable 3D hardware acceleration via VirGL</string>
+    <string name="termux_not_installed">Not available. Termux is not installed.</string>
+    <string name="termux_x11_not_installed">Not available. Needs both the Termux and Termux:X11 apps installed.</string>
     <string name="virgl_extra_flags_label">VirGL Extra Flags</string>
     <string name="virgl_extra_flags_placeholder">e.g. --multi-clients --angle-vulkan</string>
     <string name="selinux_permissive">SELinux Permissive</string>

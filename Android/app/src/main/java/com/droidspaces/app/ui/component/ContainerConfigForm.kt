@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.droidspaces.app.R
 import com.droidspaces.app.ui.theme.DsIcons
 import com.droidspaces.app.ui.theme.JetBrainsMono
@@ -93,6 +94,10 @@ fun ContainerConfigForm(
     val caps by HostCapabilities.state.collectAsState()
     // Null until the first check --format lands or the cache loads; nothing is greyed out before then.
     fun ok(key: String) = caps?.has(key) ?: true
+    // The user leaves to install Termux from the store and comes straight back.
+    LifecycleResumeEffect(Unit) { HostCapabilities.refreshApps(context); onPauseOrDispose {} }
+    val termux = ok("termux")
+    val tx11 = termux && ok("termux_x11")
 
     val isSeccompDisabled = privilegedTags(state.privileged).let { "noseccomp" in it || "full" in it }
     val usernsSupported = ok("user_ns")
@@ -200,24 +205,30 @@ fun ContainerConfigForm(
         SwitchItem(
             painter = painterResource(R.drawable.ic_x11),
             title = context.getString(R.string.termux_x11),
-            summary = context.getString(R.string.termux_x11_description),
+            summary = if (tx11) context.getString(R.string.termux_x11_description)
+                else context.getString(R.string.termux_x11_not_installed),
             checked = state.enableTermuxX11,
+            enabled = tx11,
             onCheckedChange = { clearFocus(); onStateChange(state.copy(enableTermuxX11 = it)) }
         )
         GroupDivider()
         SwitchItem(
             icon = Icons.Default.Layers,
             title = context.getString(R.string.enable_virgl),
-            summary = context.getString(R.string.enable_virgl_description),
+            summary = if (termux) context.getString(R.string.enable_virgl_description)
+                else context.getString(R.string.termux_not_installed),
             checked = state.enableVirgl,
+            enabled = termux,
             onCheckedChange = { clearFocus(); onStateChange(state.copy(enableVirgl = it)) }
         )
         GroupDivider()
         SwitchItem(
             icon = Icons.AutoMirrored.Filled.VolumeUp,
             title = context.getString(R.string.enable_pulseaudio),
-            summary = context.getString(R.string.enable_pulseaudio_description),
+            summary = if (termux) context.getString(R.string.enable_pulseaudio_description)
+                else context.getString(R.string.termux_not_installed),
             checked = state.enablePulseaudio,
+            enabled = termux,
             onCheckedChange = { clearFocus(); onStateChange(state.copy(enablePulseaudio = it)) }
         )
     }
