@@ -12,13 +12,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.droidspaces.app.ui.component.DsDropdown
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.droidspaces.app.ui.util.rememberClearFocus
@@ -30,7 +28,6 @@ import com.droidspaces.app.ui.util.LoadingIndicator
 import com.droidspaces.app.ui.util.LoadingSize
 import com.droidspaces.app.ui.util.showSuccess
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.droidspaces.app.R
@@ -56,7 +53,6 @@ fun ContainerUsersCard(
     var isLoading by remember {
         mutableStateOf(ContainerUsersManager.getCachedUsers(containerName) == null)
     }
-    var isManuallyRefreshing by remember { mutableStateOf(false) }
 
     // Available users list: always include "root", plus any local users
     val availableUsers = remember(users) {
@@ -88,33 +84,9 @@ fun ContainerUsersCard(
             }
             users = ContainerUsersManager.getUsers(containerName, useCache = refreshTrigger == 0)
             isLoading = false
-            isManuallyRefreshing = false
         }
     }
 
-
-    // Manual refresh function with premium rotation animation
-    fun refreshUsers() {
-        if (!isManuallyRefreshing) {
-            isManuallyRefreshing = true
-            scope.launch {
-                // Start timing for artificial delay
-                val startTime = System.currentTimeMillis()
-
-                // Fetch fresh data
-                users = ContainerUsersManager.getUsers(containerName, useCache = false)
-
-                // Premium UX: Ensure icon completes exactly 1 full rotation (600ms)
-                val elapsed = System.currentTimeMillis() - startTime
-                val minRotationTime = 600L // One complete 360° rotation
-                if (elapsed < minRotationTime) {
-                    delay(minRotationTime - elapsed)
-                }
-
-                isManuallyRefreshing = false
-            }
-        }
-    }
 
     Surface(
         modifier = modifier
@@ -160,45 +132,16 @@ fun ContainerUsersCard(
                     )
                 }
 
-                // Premium refresh icon button - exactly 1 full rotation, perfectly visible!
-                val rotation by animateFloatAsState(
-                    targetValue = if (isManuallyRefreshing) 360f else 0f,
-                    animationSpec = if (isManuallyRefreshing) {
-                        // Animate forward smoothly - 600ms for one full rotation
-                        tween(
-                            durationMillis = 600,
-                            easing = LinearEasing
-                        )
-                    } else {
-                        // Snap back instantly when done (no reverse animation)
-                        tween(
-                            durationMillis = 0,
-                            easing = LinearEasing
-                        )
-                    },
-                    label = "refresh_rotation"
-                )
-
-                IconButton(
-                    onClick = {
+                DsRefreshButton(
+                    contentDescription = context.getString(R.string.refresh_users),
+                    onRefresh = {
                         clearFocus()
-                        refreshUsers()
+                        users = ContainerUsersManager.getUsers(containerName, useCache = false)
                     },
-                    enabled = !isManuallyRefreshing,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = context.getString(R.string.refresh_users),
-                        modifier = Modifier
-                            .size(20.dp)
-                            .graphicsLayer {
-                                // Hardware-accelerated rotation for buttery smooth 60fps
-                                rotationZ = rotation
-                            },
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                    modifier = Modifier.size(40.dp),
+                    iconSize = 20.dp,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             // Show users list - use stable layout to prevent glitches
