@@ -502,6 +502,8 @@ static int start_rootfs_locked(struct ds_config *cfg, int *lock_fd,
     ds_warn("--virgl-flags is only applicable on Android. Skipping.");
   if (cfg->pulseaudio && !is_android())
     ds_warn("--pulse-audio is only applicable on Android. Skipping.");
+  if (cfg->anland && !is_android())
+    ds_warn("--anland is only applicable on Android. Skipping.");
 
   /* If no hostname specified, default to container name */
   if (cfg->hostname[0] == '\0') {

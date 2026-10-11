@@ -382,7 +382,7 @@ static struct option long_options[] = {
     {"virgl", no_argument, 0, 270},
     {"virgl-flags", required_argument, 0, 272},
     {"pulse-audio", no_argument, 0, 273},
-    {"anland", no_argument, 0, 280},
+    {"anland", no_argument, 0, 283},
     {"gateway", required_argument, 0, 274},
     {"gateway-container", required_argument, 0, 274},
     {"gateway-net", required_argument, 0, 275},
@@ -483,7 +483,7 @@ int ds_apply_cli_overrides(int argc, char **argv, struct ds_config *cfg,
     case 273:
       cfg->pulseaudio = 1;
       break;
-    case 280:
+    case 283:
       cfg->anland = 1;
       break;
     case 274:
