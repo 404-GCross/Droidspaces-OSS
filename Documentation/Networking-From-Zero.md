@@ -6,53 +6,7 @@ desc: Every networking concept behind Droidspaces gateway mode, from the start: 
 keywords: droidspaces, networking, gateway, openwrt, nat, dhcp, dns, lan, wan, veth, bridge, namespace, linux, android
 -->
 
-# Networking from zero: understanding Droidspaces gateway mode
-
-### Quick navigation
-
-- [Part 1: The absolute basics](#part-1-the-absolute-basics)
-    - [What is an IP address?](#what-is-an-ip-address)
-    - [What is a network?](#what-is-a-network)
-    - [LAN - Local Area Network](#lan---local-area-network)
-    - [WAN - Wide Area Network](#wan---wide-area-network)
-    - [Gateway](#gateway)
-- [Part 2: How data actually gets delivered](#part-2-how-data-actually-gets-delivered)
-    - [MAC address vs IP address](#mac-address-vs-ip-address)
-    - [What is a packet?](#what-is-a-packet)
-- [Part 3: DHCP (how you get an IP address)](#part-3-dhcp-how-you-get-an-ip-address)
-- [Part 4: DNS (how names become addresses)](#part-4-dns-how-names-become-addresses)
-- [Part 5: NAT (the magic your router does)](#part-5-nat-the-magic-your-router-does)
-    - [NAT in Droidspaces](#nat-in-droidspaces)
-    - [How NAT mode picks the WAN uplink (automatic)](#how-nat-mode-picks-the-wan-uplink-automatic)
-    - [Pinning the uplink manually with --upstream](#pinning-the-uplink-manually-with---upstream)
-    - [Use cases for --upstream](#use-cases-for---upstream)
-- [Part 6: Bridges and virtual cables (Linux plumbing)](#part-6-bridges-and-virtual-cables-linux-plumbing)
-    - [What is a network bridge?](#what-is-a-network-bridge)
-    - [What is a veth pair?](#what-is-a-veth-pair)
-    - [How NAT mode uses bridges and veths](#how-nat-mode-uses-bridges-and-veths)
-- [Part 7: Network namespaces (how containers are isolated)](#part-7-network-namespaces-how-containers-are-isolated)
-- [Part 8: OpenWRT and what it is](#part-8-openwrt-and-what-it-is)
-- [Part 9: The new gateway mode - putting it all together](#part-9-the-new-gateway-mode---putting-it-all-together)
-    - [Why does gateway mode exist?](#why-does-gateway-mode-exist)
-    - [The architecture](#the-architecture)
-    - [Step by step - what happens when you start a gateway-mode container](#step-by-step---what-happens-when-you-start-a-gateway-mode-container)
-    - [What "lazy attachment" means](#what-lazy-attachment-means)
-    - [Why resolv.conf is left alone in gateway mode](#why-resolvconf-is-left-alone-in-gateway-mode)
-    - [Why bridge-nf-call-iptables is set to 0](#why-bridge-nf-call-iptables-is-set-to-0)
-    - [Start order and automatic self-healing](#start-order-and-automatic-self-healing)
-    - [What happens when containers stop](#what-happens-when-containers-stop)
-- [Part 10: Gateway mode flags and configuration](#part-10-gateway-mode-flags-and-configuration)
-    - [Required vs optional flags](#required-vs-optional-flags)
-    - [What --gateway-net does](#what---gateway-net-does)
-    - [What --gateway-iface does](#what---gateway-iface-does)
-    - [The flag conflict you must avoid](#the-flag-conflict-you-must-avoid)
-    - [IPv6 through the gateway](#ipv6-through-the-gateway)
-    - [Validation rules and kernel requirements](#validation-rules-and-kernel-requirements)
-- [Part 11: Comparing all networking modes](#part-11-comparing-all-networking-modes)
-- [Part 12: Real-world use cases for gateway mode](#part-12-real-world-use-cases-for-gateway-mode)
-- [Quick reference - terms](#quick-reference---terms)
-
----
+# Networking from zero
 
 ## Part 1: The absolute basics
 
@@ -112,7 +66,6 @@ At home, the router *is* the gateway. Your phone's IP is `192.168.1.5` (LAN). Wh
 
 **Rule:** every device on a LAN is configured with a "default gateway", the address it sends all traffic to when it has no more specific route.
 
----
 
 ## Part 2: How data actually gets delivered
 
@@ -142,7 +95,6 @@ Data crossing a network is split into small chunks called **packets**. Each pack
 
 The destination reassembles the packets.
 
----
 
 ## Part 3: DHCP (how you get an IP address)
 
@@ -177,7 +129,6 @@ At home, the **router runs the DHCP server** and hands out IPs to every device t
 
 In **Droidspaces NAT mode**, Droidspaces runs its own small DHCP server that gives the container its IP (in the `172.28.x.x` range). The IP is deterministic: it is derived from the container's name, saved to its config file and offered again on every boot, so a container keeps the same address across restarts.
 
----
 
 ## Part 4: DNS (how names become addresses)
 
@@ -205,7 +156,6 @@ Every device is configured with a DNS server address. On most home networks the 
 
 In **Droidspaces NAT mode**, Droidspaces writes a `resolv.conf` inside the container that points at a DNS server (`1.1.1.1` and `8.8.8.8` by default, or whatever you pass with `--dns`). The same DNS servers are also advertised in the DHCP lease.
 
----
 
 ## Part 5: NAT (the magic your router does)
 
@@ -309,7 +259,6 @@ droidspaces --name=box --rootfs=/data/box --net=nat --upstream=rmnet* start
 
 The container's traffic goes out over mobile data while the rest of the phone stays on Wi-Fi. Useful for testing from a different IP or network, moving a container's bandwidth onto cellular, or running something on a separate connection from everything else on the phone.
 
----
 
 ## Part 6: Bridges and virtual cables (Linux plumbing)
 
@@ -368,7 +317,6 @@ The bridge `ds-br0` holds the gateway IP `172.28.0.1`, which every NAT container
 
 Droidspaces runs a small per-container DHCP server on the container's host-side veth. The whole `172.28.0.0/16` subnet belongs to Droidspaces. The `172.28.0.x` row is reserved for the gateway itself, so containers always get an address from `172.28.1.x` to `172.28.254.x`, and all of it is NATed out through Android's real interface.
 
----
 
 ## Part 7: Network namespaces (how containers are isolated)
 
@@ -390,7 +338,6 @@ The veth pair is the link between the host's namespace and the container's:
 - One end sits in the container's network namespace (as `eth0`).
 - The other end stays in the host's network namespace, where Droidspaces connects it to a bridge.
 
----
 
 ## Part 8: OpenWRT and what it is
 
@@ -408,9 +355,8 @@ A running OpenWRT provides:
 
 So you can run OpenWRT in a Droidspaces container and it behaves like a real router: it manages networks, hands out DHCP leases, serves DNS, applies firewall rules, routes VPN traffic, and so on.
 
----
 
-## Part 9: The new gateway mode - putting it all together
+## Part 9: Gateway mode, putting it all together
 
 ### Why does gateway mode exist?
 
@@ -555,7 +501,6 @@ Cleanup in gateway mode is deliberately minimal, in line with "plumbing only":
 - **The last client stops while the gateway is still running:** the bridge is **kept**, not reaped. Tearing it down would flap the carrier on the gateway's live `eth1` and sometimes make netifd report "device initialization failed". An idle bridge with no IP does no harm, and the next client reuses it.
 - **The gateway stops:** Droidspaces deletes the gateway-side veth itself. It cannot be left to the kernel: the host end of a veth holds a reference to its peer's namespace, so the dead gateway's namespace would never be freed. Once no clients remain *and* the gateway is gone, the idle bridge is reaped.
 
----
 
 ## Part 10: Gateway mode flags and configuration
 
@@ -768,7 +713,6 @@ Two more things to know:
 - `--port` only makes sense in NAT mode. In gateway mode it is ignored with a warning, because port forwarding and uplink selection are the gateway container's job.
 - When the host bridge name is derived from `--gateway-net`, the name is sanitised (only letters, digits, `_` and `-` are kept) and truncated to 9 characters, giving `ds-` plus at most 9 characters. If you need an exact bridge name, set it with `--gateway-bridge`.
 
----
 
 ## Part 11: Comparing all networking modes
 
@@ -784,7 +728,6 @@ Two more things to know:
 | Needs a second container to function? | No | No | No | Yes (the gateway container) | No, but a wired NIC and `CONFIG_MACVLAN` |
 | Good for | Simple internet access | Maximum performance, no veth or bridge in the path | Offline / sandboxed workloads | Router appliance, VPN gateway, segmented LANs | A real LAN address, OpenWRT on a physical LAN |
 
----
 
 ## Part 12: Real-world use cases for gateway mode
 
@@ -808,7 +751,6 @@ Run OpenWRT with a `dnsmasq` blocklist (or with Adblock installed via opkg). Eve
 
 OpenWRT's `tc` (traffic control) and `sqm-scripts` can shape bandwidth per container, because OpenWRT sees each container as a separate MAC address on its LAN interface.
 
----
 
 ## Quick reference - terms
 
