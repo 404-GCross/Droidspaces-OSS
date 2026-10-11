@@ -42,7 +42,7 @@ Droidspaces runs full Linux distributions as containers on a rooted Android phon
 2. Open the **Containers** tab, tap **+**, then **Repository**. Pick a distribution, tap **Download**, then **Install**, and walk through the setup.
 3. Tap **Start**. Open the **Panel** tab and tap **Terminal** to get a shell.
 
-The [Android installation guide](Documentation/Installation-Android.md) covers each step with screenshots.
+The [Android installation guide](Documentation/Installation-Android.md) covers each step in detail.
 
 **Linux**
 
