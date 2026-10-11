@@ -82,6 +82,10 @@ Known GPU families: Mesa DRI render nodes on Intel, AMD and most ARM SoCs, Qualc
 
 `--x11`, key `enable_x11`. Android: starts the Termux:X11 server when the container starts, mounts its socket into the container, and sets `DISPLAY` for every login shell. Needs the Termux and Termux:X11 apps and the one-time setup in the [display guide](Graphics-and-Audio.md). Linux: mounts the host's X11 socket so GUI programs in the container open on your desktop.
 
+### Anland Display
+
+`--anland`, key `enable_anland`. Android only. Starts the Anland display daemon for the container, so a Wayland compositor patched for Anland can show its desktop in the Anland app. Needs GPU Access, a patched compositor in the container and the Anland app on the phone, and it replaces Termux:X11 rather than adding to it. The [Anland guide](Anland.md) walks through it.
+
 ### Configure VirGL 3D Acceleration
 
 `--virgl`, key `enable_virgl`. Android only. Starts the VirGL server in Termux alongside Termux:X11 and sets `GALLIUM_DRIVER=virpipe` in the container, so OpenGL programs render on the phone's GPU instead of in software. The right choice on Mali and PowerVR GPUs. On Qualcomm, Turnip inside the container with GPU Access is faster; the [display guide](Graphics-and-Audio.md) compares them.

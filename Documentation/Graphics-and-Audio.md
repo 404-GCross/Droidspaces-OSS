@@ -8,7 +8,7 @@ keywords: gpu, acceleration, droidspaces, termux, x11, virgl, turnip, adreno, pu
 
 # Display, audio and desktop
 
-On Android, Droidspaces starts the Termux:X11 display server, the VirGL server and the PulseAudio server for you when the matching toggles are on, and sets `DISPLAY`, `GALLIUM_DRIVER` and `PULSE_SERVER` inside the container. Turn on the toggles, start the container, and graphical programs open in the Termux:X11 app with sound from the phone's speaker. This page covers the one-time setup, the three ways to render, sound, a desktop that starts at boot, and the Linux side.
+On Android, Droidspaces starts the Termux:X11 display server, the VirGL server and the PulseAudio server for you when the matching toggles are on, and sets `DISPLAY`, `GALLIUM_DRIVER` and `PULSE_SERVER` inside the container. Turn on the toggles, start the container, and graphical programs open in the Termux:X11 app with sound from the phone's speaker. This page covers the one-time setup, the three ways to render, sound, a desktop that starts at boot, and the Linux side. For a Wayland desktop such as KDE Plasma there is a second path, covered on the [Anland](Anland.md) page.
 
 > [!IMPORTANT]
 > Droidspaces does not ship Termux:X11, VirGL or PulseAudio. They are Termux packages. Droidspaces starts and stops them and bridges their sockets into the container.
@@ -142,4 +142,4 @@ Graphical programs started in the container then open on your desktop with hardw
 
 ---
 
-Previous: [Linux CLI](Linux-CLI.md) | Next: [Kernel configuration](Kernel-Configuration.md)
+Previous: [Linux CLI](Linux-CLI.md) | Next: [Anland](Anland.md)

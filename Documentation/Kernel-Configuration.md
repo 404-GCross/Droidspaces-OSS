@@ -1,7 +1,7 @@
 <!--
 title: Kernel configuration
 section: Guides
-order: 5
+order: 6
 desc: How to build an Android kernel with Droidspaces support: the config options and patches for non-GKI and GKI kernels, and how to check the result.
 keywords: kernel, configuration, droidspaces, android, compile, gki, nongki, patches, compatibility, kabi
 -->
@@ -299,4 +299,4 @@ Kernel questions get answered in the [Telegram channel](https://t.me/Droidspaces
 
 ---
 
-Previous: [Display, audio and desktop](Graphics-and-Audio.md) | Next: [Recipes](Cool-things-you-can-do.md)
+Previous: [Anland](Anland.md) | Next: [Recipes](Cool-things-you-can-do.md)

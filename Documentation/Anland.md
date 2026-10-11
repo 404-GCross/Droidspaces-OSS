@@ -1,146 +1,80 @@
 <!--
-title: Anland (Wayland) Usage Guide
+title: Anland
 section: Guides
-order: 3
-desc: Configure Anland Wayland display for Droidspaces Android containers, including backend installation, APK setup, and container options.
+order: 5
+desc: A Wayland desktop on Android through Anland: install a patched compositor in the container, install the Anland app, and turn on Anland Display.
 keywords: anland, wayland, droidspaces, android, kwin, weston, kde, plasma, gpu, adreno, snapdragon
 -->
 
-# Anland (Wayland) Usage Guide
+# Anland
 
-Anland is an optional Wayland display path for Droidspaces. It uses a buffer-sharing protocol where a Linux compositor, such as KWin or Weston, renders desktop content into GPU buffers, and the Anland display surface on Android presents those buffers. A lightweight daemon bridges the Linux container and Android app over a Unix domain socket.
+Anland is a second way to get a desktop on the phone, next to Termux:X11. It is for Wayland. A Linux compositor patched for Anland, KWin for KDE Plasma or Weston, renders straight into GPU buffers, and the Anland app on Android shows those buffers on screen. Droidspaces runs the small daemon that connects the two over a socket and gives you a button to open the desktop.
 
-Unlike the Termux:X11 path, Anland is designed for Wayland compositor workflows. It is useful when you want to run desktop environments such as KDE Plasma Wayland inside a Droidspaces container.
+Anland only handles the display. The container, its rootfs, GPU access and startup are still Droidspaces' job. Anland works best on Qualcomm Snapdragon devices with Adreno GPUs, because it leans on the device's GPU buffer sharing, and that is where it has been tested most.
 
-### Quick Navigation
+## What you need
 
-- [Prerequisites](#requirements)
-- [Step 1: Install an Anland-supported Backend](#backend)
-    - [Method 1: Build and Install Inside the Container](#manual-build)
-    - [Method 2: Use the Droidspaces Rootfs Builder](#rootfs-builder)
-- [Step 2: Install the Anland App](#app)
-- [Step 3: Configure the Droidspaces Container](#container-config)
+- A container that already runs on your phone.
+- A compositor patched for Anland inside that container. KWin is the main one; the [Anland producers directory](https://github.com/superturtlee/anland/tree/main/producers) lists the backends that exist.
+- The Anland app on Android.
 
----
+## Step 1: Put an Anland backend in the container
 
-<a id="requirements"></a>
+Either build the backend yourself or use a rootfs that already has it.
 
-## Prerequisites
+### Build it inside the container
 
-Before configuring Anland, make sure the following requirements are met:
+For a distribution or desktop of your choice, or when you want to see what the backend does.
 
-1. **An Android device that supports Droidspaces**: Anland works together with Droidspaces and requires `Anland Display` to be enabled in the container configuration.
-2. **An Anland-supported display backend**: The compositor backend must be patched for Anland. `KWin` is the main supported backend. See the [Anland producers directory](https://github.com/superturtlee/anland/tree/main/producers) for available backends.
-3. **A Qualcomm Snapdragon / Adreno device is recommended**: Anland depends heavily on device-side GPU and buffer-sharing behavior, and Qualcomm platforms usually provide better compatibility.
-
-> [!NOTE]
->
-> Anland only handles the display path. Container management, rootfs handling, permissions, GPU access, and startup flow are still managed by Droidspaces.
-
----
-
-<a id="backend"></a>
-
-## Step 1: Install an Anland-supported Backend
-
-The desktop environment inside the container must use an Anland-supported backend. Otherwise, the Android side cannot receive the Wayland output.
-
-<a id="manual-build"></a>
-
-### Method 1: Build and Install Inside the Container
-
-Use this method if you want to choose a specific desktop environment, target distribution, or debug the backend manually.
-
-1. **Enter the Droidspaces container.**
-
-2. **Clone the Anland source code.**
+1. Open a shell in the container and clone the Anland source:
 
    ```bash
    git clone https://github.com/superturtlee/anland.git
    ```
 
-3. **Choose the matching desktop environment and distribution under the `producers` directory.**
+2. Under `producers`, pick the directory for your desktop and distribution. For KDE it looks like this:
 
-   For example, the KDE backend layout looks like this:
-
-   ```txt
-   producers
-   └── kde
-       ├── anland_backend_debian13_v5
-       ├── anland_backend_v5
-       ├── Debian13_v5
-       ├── Fedora43_v5
-       └── ubuntu2604_v5
-   └── other desktops
+   ```
+   producers/kde
+   ├── anland_backend_debian13_v5
+   ├── anland_backend_v5
+   ├── Debian13_v5
+   ├── Fedora43_v5
+   └── ubuntu2604_v5
    ```
 
-4. **Run the matching `build.sh` script as root.**
+3. Run that directory's `build.sh` as root. It installs the dependencies and the patched backend.
+4. Start the desktop with the project's `startup.sh`.
 
-   The build script installs the required dependencies and installs the matching Anland backend into the container.
+### Use a prebuilt KDE Plasma rootfs
 
-5. **Start the desktop with the project's `startup.sh` script.**
+[Droidspaces-rootfs-KDE-builder](https://github.com/Goldzxcbug/Droidspaces-rootfs-KDE-builder) builds a KDE Plasma rootfs with the Anland backend already in it. It is the simpler route if KDE is what you want; it builds nothing else.
 
-<a id="rootfs-builder"></a>
+1. Fork the project and open its **Actions** page.
+2. Run the "编译并发布Droidspaces Rootfs" workflow by hand with the "Wayland 支持" option turned on. The build takes about fifteen minutes.
+3. Download the rootfs from the project's **Releases** page and install it with **Install from file** in the app.
+4. If the desktop does not start on its own, enter the container as a normal user and run `startplasma-wayland`.
 
-### Method 2: Use the Droidspaces Rootfs Builder
+## Step 2: Install the Anland app
 
-If you mainly use KDE Plasma, the automated rootfs builder is recommended. It is simpler and better suited for repeatable deployments.
+Install the APK from the [latest Anland release](https://github.com/superturtlee/anland/releases/latest), open it once, and grant it root.
 
-Project: [Droidspaces-rootfs-KDE-builder](https://github.com/Goldzxcbug/Droidspaces-rootfs-KDE-builder)
+## Step 3: Configure the container
 
-> [!IMPORTANT]
->
-> This method currently supports KDE Plasma only.
+In the container's configuration:
 
-1. **Fork the project.**
-2. Open the GitHub **Actions** page and find the `编译并发布Droidspaces Rootfs` workflow.
-3. Run the workflow manually and enable the `Wayland 支持` option.
-4. Wait for the build to finish. This usually takes about 15 minutes.
-5. Open the project's **Releases** page, download the generated rootfs package, and import it into Droidspaces.
-6. If KDE desktop auto-start is not enabled, enter the container as a normal user and run:
+1. Turn on **GPU Access**.
+2. Turn on **Anland Display**. On the CLI that is `--anland`, key `enable_anland`.
+3. Turn off **Configure Termux:X11**. The two display paths set conflicting variables and services, so a container uses one or the other.
 
-   ```bash
-   startplasma-wayland
-   ```
+Three more settings are worth knowing:
+
+- **Configure PulseAudio** can stay off. Anland carries audio itself. If it was on before, remove any `PULSE_SERVER` variable left in the container so programs stop looking for the old server.
+- **Allow Sandboxing** should be on for a full desktop such as KDE Plasma. Without it Plasma on Wayland can get slow or stop responding. Privileged mode is not needed, and neither is any of its tags.
+- **SELinux Permissive** should stay off. Try enforcing first; turn permissive on only if Anland fails to start or draw on your device, and treat that as a workaround while you report it.
+
+Start the container. When the backend is up, the container's card on the **Panel** tab shows a **Launch Anland** button, which opens the desktop in the Anland app.
 
 ---
 
-<a id="app"></a>
-
-## Step 2: Install the Anland App
-
-1. Download the **Anland APK** from the [latest Anland release](https://github.com/superturtlee/anland/releases/latest).
-2. Install the APK on your Android device.
-3. Grant **root permission** to Anland on first launch.
-
----
-
-<a id="container-config"></a>
-
-## Step 3: Configure the Droidspaces Container
-
-Edit the target container configuration in Droidspaces and set the following options.
-
-### Required Settings
-
-1. Enable **GPU Access**.
-2. Enable **Anland Display**.
-3. Disable **Configure Termux:X11**.
-
-> [!IMPORTANT]
->
-> Anland and Termux:X11 are separate display paths. When using Anland, disable the Termux:X11 configuration to avoid conflicting environment variables and display services.
-
-### Recommended Settings
-
-1. **Disable Configure PulseAudio**.
-
-   Anland provides its own audio handling path, so the Droidspaces PulseAudio configuration is usually unnecessary. After disabling it, also clear any existing `PULSE_SERVER` environment variable inside the container so applications do not continue connecting to an old PulseAudio service.
-
-2. **Keep SELinux Permissive Mode disabled by default**.
-
-   Try running Anland under SELinux enforcing mode first. If Anland fails to start or display correctly on a specific device, enable **SELinux Permissive Mode** temporarily as a compatibility troubleshooting step.
-
-3. **Enable Allow Sandboxing when running a desktop environment such as KDE Plasma.**
-
-   It is recommended for maximum performance. Without it, KDE Plasma Wayland may become noticeably slow or unresponsive. Anland itself does not need privileged mode, and no `noseccomp`, `nomask` or other privileged flag is required.
+Previous: [Display, audio and desktop](Graphics-and-Audio.md) | Next: [Kernel configuration](Kernel-Configuration.md)

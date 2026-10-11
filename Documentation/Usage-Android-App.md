@@ -81,7 +81,7 @@ Name and hostname, then the configuration form, then storage, then a summary. Th
   <img src="resources/gallery/10-container-details.png" width="30%">
 </p>
 
-Only running containers appear here, each with its uptime, IP address, CPU and RAM. With a memory or CPU limit set, usage is shown against the limit. **Terminal** opens a shell straight from the card. Tapping anywhere else on the card opens the container's details.
+Only running containers appear here, each with its uptime, IP address, CPU and RAM. With a memory or CPU limit set, usage is shown against the limit. **Terminal** opens a shell straight from the card, and a container with [Anland Display](Anland.md) on gets a **Launch Anland** button next to it once its desktop is up. Tapping anywhere else on the card opens the container's details.
 
 ### Container details
 

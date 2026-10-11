@@ -6,6 +6,9 @@ desc: 在 Droidspaces Android 容器中配置 Anland Wayland 显示，包括后�
 keywords: anland, wayland, droidspaces, android, kwin, weston, kde, plasma, gpu, adreno, snapdragon
 -->
 
+> [!NOTE]
+> 本页的翻译落后于英文版本，部分内容可能已过时。最新内容请看[英文页面](../Anland.md)。
+
 # Anland (Wayland) 使用指南
 
 Anland 是 Droidspaces 的可选 Wayland 显示方案。它通过一套缓冲区共享协议，让 Linux 合成器（如 KWin / Weston）将桌面内容渲染到 GPU 缓冲区，再由 Android 端的 Anland 显示表面进行呈现。Linux 容器与 Android 应用之间通过轻量级守护进程和 Unix 域套接字完成桥接。

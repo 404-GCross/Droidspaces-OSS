@@ -81,6 +81,7 @@ Each flag that configures the container is saved in its config file on `start`, 
 | `--virgl` | Android only | `enable_virgl` |
 | `--virgl-flags` | extra arguments for the VirGL server | `virgl_extra_flags` |
 | `--pulse-audio` | Android only | `enable_pulseaudio` |
+| `--anland` | Android only, Wayland desktop through the Anland app | `enable_anland` |
 | `--enable-android-storage` | Android only | `enable_android_storage` |
 
 **Resource limits, security and boot**
