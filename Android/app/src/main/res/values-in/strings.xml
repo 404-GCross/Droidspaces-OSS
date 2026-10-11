@@ -270,7 +270,6 @@
     <string name="help_card_title">Baru di Droidspaces?</string>
     <string name="help_card_message">Ketuk di sini untuk mempelajari cara menyiapkan kontainer Linux pertama Anda!</string>
     <string name="privileged_mode">Mode Istimewa</string>
-    <string name="privileged_mode_description">Konfigurasikan pelonggaran keamanan terperinci untuk virtualisasi bersarang atau akses perangkat keras tingkat lanjut.</string>
     <string name="privileged_nomask_desc">Nonaktifkan pembatasan akses untuk mengizinkan akses tulis ke /proc dan /sys. Catatan: /sys tetap hanya dapat dibaca kecuali jika Akses Perangkat Keras juga diaktifkan.</string>
     <string name="privileged_nocaps_desc">Jangan lepaskan kemampuan Linux (hak akses root penuh).</string>
     <string name="privileged_noseccomp_desc">Nonaktifkan penyaringan panggilan sistem Seccomp. Hal ini mengaktifkan fitur-fitur kernel tingkat lanjut seperti ruang nama pengguna tanpa hak istimewa, yang sangat diperlukan untuk sandboxing bersarang (Bubblewrap, Flatpak), serta memungkinkan pemuatan modul kernel yang tidak termasuk dalam pohon sumber.</string>
@@ -305,7 +304,6 @@
     <string name="kernel_requirements_nongki">Persyaratan Kernel non-GKI (&lt;=4.19)</string>
     <string name="kernel_requirements_gki">Persyaratan Kernel GKI (&gt;=5.4)</string>
     <string name="guide">Panduan</string>
-    <string name="install">Pasang</string>
     <string name="gpu_option">GPU</string>
     <string name="selinux_permissive_option">SELinux Permisif</string>
     <string name="volatile_option">Volatile</string>

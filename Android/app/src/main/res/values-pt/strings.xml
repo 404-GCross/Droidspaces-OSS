@@ -219,5 +219,4 @@
     <string name="generate_bug_report">Gerar um relatório de bug</string>
     <string name="generate_bug_report_description">Coletar informações do sistema e logs para a depuração</string>
     <string name="bug_report_title">Relatório de erro</string>
-    <string name="install">Instalar</string>
 </resources>

@@ -235,7 +235,6 @@
     <string name="generate_bug_report">Generar un informe de fallo</string>
     <string name="generate_bug_report_description">Recoge informe del sistema y bitácoras para depuración</string>
     <string name="bug_report_title">Informe de fallo</string>
-    <string name="install">Instalar</string>
     <string name="type_container_name_to_confirm">Teclee el nombre del contenedor exactamente para confirmar:</string>
     <string name="gpu_option">GPU</string>
     <string name="x11_option">X11</string>

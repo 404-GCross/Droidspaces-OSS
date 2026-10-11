@@ -86,7 +86,6 @@
     <string name="no_containers_installed">Nejsou nainstalovány žádné kontejnery</string>
     <string name="install_container_description">Nainstalujte kontejner pomocí tlačítka níže</string>
     <string name="install_container">Nainstalovat kontejner</string>
-    <string name="install">Nainstalovat</string>
     <string name="file_picker_error">Vyberte soubor .tar.xz nebo .tar.gz. Vybráno: %1$s</string>
     <string name="file_picker_error_unknown">Vyberte soubor .tar.xz nebo .tar.gz. Typ souboru se nepodařilo zjistit.</string>
     <string name="stopping_container">Zastavuje se kontejner...</string>
@@ -402,7 +401,6 @@
     <string name="help_card_title">Začínáte s Droidspaces?</string>
     <string name="help_card_message">Klepnutím sem se dozvíte, jak nastavit svůj první linuxový kontejner!</string>
     <string name="privileged_mode">Privilegovaný režim</string>
-    <string name="privileged_mode_description">Nastavte dílčí uvolnění bezpečnostních omezení pro vnořenou virtualizaci nebo pokročilý přístup k hardwaru.</string>
     <string name="privileged_nomask_desc">Vypne ochranné maskování a povolí zápis do /proc a /sys. Poznámka: /sys zůstane jen pro čtení, pokud není zapnutý také přístup k hardwaru.</string>
     <string name="privileged_nocaps_desc">Neodebírá žádné schopnosti (capabilities) Linuxu (plný přístup roota).</string>
     <string name="privileged_noseccomp_desc">Vypne filtrování systémových volání seccomp. Tím povolí pokročilé funkce jádra, například neprivilegované uživatelské jmenné prostory, které jsou nezbytné pro vnořený sandboxing (Bubblewrap, Flatpak), a také načítání modulů jádra mimo strom.</string>

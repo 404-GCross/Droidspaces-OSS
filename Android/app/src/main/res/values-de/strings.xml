@@ -262,7 +262,6 @@
     <string name="generate_bug_report">Fehlerbericht erstellen</string>
     <string name="generate_bug_report_description">Systeminformationen und Protokolle zur Fehlerbehebung erfassen</string>
     <string name="bug_report_title">Fehlerbericht</string>
-    <string name="install">Installieren</string>
     <string name="gpu_option">GPU</string>
     <string name="x11_option">X11</string>
     <string name="selinux_permissive_option">SELinux Permissive</string>
@@ -381,7 +380,6 @@
     <string name="help_card_message">Hier tippen, um zu erfahren, wie Sie Ihren ersten Linux-Container einrichten!</string>
     <string name="help_card_url" translatable="false">https://github.com/ravindu644/Droidspaces-OSS/blob/main/Documentation/Installation-Android.md</string>
     <string name="privileged_mode">Privilegierter Modus</string>
-    <string name="privileged_mode_description">Konfigurieren von detaillierten Sicherheitslockerungen für verschachtelte Virtualisierung oder erweiterten Hardwarezugriff.</string>
     <string name="privileged_nomask_desc">Jail-Masken deaktivieren, um Schreibzugriff auf /proc und /sys zu ermöglichen. Hinweis: /sys bleibt schreibgeschützt, sofern nicht auch der Hardwarezugriff aktiviert ist.</string>
     <string name="privileged_nocaps_desc">Auf keinerlei Linux-Funktionen verzichten (vollständige Root-Rechte).</string>
     <string name="privileged_noseccomp_desc">Seccomp-Syscall-Filterung deaktivieren. Dadurch werden erweiterte Kernel-Funktionen wie nicht privilegierte Benutzernamensräume aktiviert, die für verschachtelte Sandboxing-Umgebungen (Bubblewrap, Flatpak) zwingend erforderlich sind, und es wird das Laden von Kernel-Modulen außerhalb des Kernel-Baums ermöglicht.</string>

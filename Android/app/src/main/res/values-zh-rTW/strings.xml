@@ -308,7 +308,6 @@
     <string name="help_card_message">點擊此處，了解如何設定Linux 容器吧！</string>
     <string name="help_card_url" translatable="false">https://github.com/ravindu644/Droidspaces-OSS/blob/main/Documentation/Installation-Android.md</string>
     <string name="privileged_mode">特權模式</string>
-    <string name="privileged_mode_description">配置細粒度的安全限制放寬，以支援巢狀虛擬化或進階硬體存取。</string>
     <string name="privileged_nomask_desc">停用隔離遮罩以允許對/proc 和/sys 的寫入存取。注意：除非同時啟用了“硬體存取”，否則/sys 將保持唯讀狀態。</string>
     <string name="privileged_nocaps_desc">保留所有 Linux 功能（完整 root 權限）。</string>
     <string name="privileged_noseccomp_desc">禁用Seccomp 系統呼叫過濾。這將啟用非特權使用者命名空間等進階核心功能，是嵌套沙箱的必要條件（Bubblewrap、Flatpak），同時允許載入非官方核心模組。</string>
@@ -335,7 +334,6 @@
     <string name="feat_privileged_desc">進階使用者可透過特權模式放寬安全限制。</string>
     <string name="feat_autoboot_title">開機時自動啟動</string>
     <string name="feat_autoboot_desc">即使螢幕鎖定且資料加密，也能在啟動時自動啟動容器。</string>
-    <string name="install">安裝</string>
     <string name="please_wait_hint">請稍候，我們正在處理您的請求…</string>
     <string name="kernel_requirements_nongki">非 GKI 核心需求（≤4.19）</string>
     <string name="kernel_requirements_gki">GKI 核心需求（≥5.4）</string>

@@ -285,7 +285,6 @@
     <string name="guide">Ghid</string>
     <string name="symlink_integration">Integrează Droidspaces în calea sistemului</string>
     <string name="symlink_integration_description">Creează un symlink în /system/bin pentru a accesa comanda droidspaces într-un shell Android rootat. AVERTISMENT: ACTIVAREA ACESTEI OPȚIUNI VA CAUZA UN BOOTLOOP DACA SISTEMUL TĂU MOUNT ESTE O METAMODULĂ OVERLAYFS. Utilizează această opțiune numai cu sistemele de mount Magic Mount (Restart necesar)</string>
-    <string name="install">Instalează</string>
     <string name="failure_in_operation">Eroare în %1$s la containerul %2$s</string>
     <string name="selinux_permissive_option">SELinux Permisiv</string>
     <string name="volatile_option">Volatil</string>
@@ -320,7 +319,6 @@
     <string name="export_container_failed">Nu s-a putut exporta container-ul %1$s</string>
     <string name="starting_export">Export-ul a pornit...</string>
     <string name="privileged_mode">Modul privilegiat</string>
-    <string name="privileged_mode_description">Configurează detaliat relaxarea securității pentru virtualizarea nested sau accesul avansat al hardware-ului.</string>
     <string name="privileged_nomask_desc">Dezactivează jail masks-urile pentru a permite scrierea către /proc și /sys. Notă: /sys rămâne read-only dacă Accesul la Hardware nu este activat.</string>
     <string name="privileged_nocaps_desc">Nu dezactiva nicio capacitate Linux (putere completă de root).</string>
     <string name="privileged_noseccomp_desc">Dezactivează filtrarea Seccomp de syscall. Aceasta permite opțiuni de kernel avansate precum utilizarea neprivilegiată a namespace-urilor user, necesară pentru sandboxing nested (Bubblewrap, Flatpak). Dezactivarea acestei opțiuni va permite, de asemenea, încărcarea modulelor kernel out-of-tree.</string>
