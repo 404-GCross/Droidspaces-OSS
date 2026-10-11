@@ -796,14 +796,8 @@ fun DroidspacesNavigation(
             popExitTransition = defaultExitTransition
         ) { backStackEntry ->
             val containerName = backStackEntry.arguments?.getString("containerName") ?: ""
-            // Resolve cached users for the user picker dialog
-            val users = remember(containerName) {
-                com.droidspaces.app.util.ContainerUsersManager.getCachedUsers(containerName)
-                    ?: listOf("root")
-            }
             ContainerTerminalScreen(
                 containerName = containerName,
-                initialUsers = users,
                 onNavigateBack = {
                     navController.popBackStack()
                     sharedContainerViewModel.refresh()

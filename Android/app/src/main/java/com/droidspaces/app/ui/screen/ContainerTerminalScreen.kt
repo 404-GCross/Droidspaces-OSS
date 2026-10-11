@@ -47,6 +47,7 @@ import com.droidspaces.app.ui.terminal.virtualkeys.VirtualKeysView
 import android.graphics.Typeface
 import com.droidspaces.app.util.AnimationUtils
 import com.droidspaces.app.util.ContainerOSInfoManager
+import com.droidspaces.app.util.ContainerUsersManager
 import com.droidspaces.app.util.FontInfo
 import com.droidspaces.app.util.PreferencesManager
 import java.io.File
@@ -56,6 +57,7 @@ import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalView
 import java.lang.ref.WeakReference
 import java.util.UUID
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.core.content.res.ResourcesCompat
 import com.droidspaces.app.R
@@ -70,7 +72,6 @@ private data class TerminalTab(
 @Composable
 fun ContainerTerminalScreen(
     containerName: String,
-    initialUsers: List<String>,
     onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -99,11 +100,9 @@ fun ContainerTerminalScreen(
         }
     }
 
-    val availableUsers = remember(initialUsers) {
-        val list = initialUsers.toMutableList()
-        if (!list.contains("root")) list.add(0, "root")
-        list
-    }
+    val scope = rememberCoroutineScope()
+    var availableUsers by remember { mutableStateOf(listOf("root")) }
+    var fetchingUsers by remember { mutableStateOf(false) }
 
     val tabs = remember { mutableStateListOf<TerminalTab>() }
     var activeTabId by remember { mutableStateOf("") }
@@ -124,22 +123,6 @@ fun ContainerTerminalScreen(
             ?: ContainerOSInfoManager.fetchAll(context)[containerName]?.hostname
         if (resolved != null) hostname = resolved
         hostnameReady = true
-    }
-
-    LaunchedEffect(binder, hostnameReady) {
-        binder ?: return@LaunchedEffect
-        if (!hostnameReady) return@LaunchedEffect
-        if (tabs.isNotEmpty()) return@LaunchedEffect
-        val existing = TerminalSessionService.globalSessionList
-            .filter { (_, info) -> info.containerName == containerName }
-        if (existing.isNotEmpty()) {
-            existing.forEach { (id, info) ->
-                tabs.add(TerminalTab(id = id, user = info.user, label = "${info.user}@$hostname"))
-            }
-            activeTabId = existing.keys.last()
-        } else {
-            showUserPicker = true
-        }
     }
 
     // Sync UI tabs with background service reality.
@@ -169,6 +152,36 @@ fun ContainerTerminalScreen(
             tabs.add(newTab)
         }
         activeTabId = id
+    }
+
+    // Users change from inside the container (adduser in another tab), so ask every time
+    // instead of trusting the cache. A picker with root as its only row is skipped.
+    suspend fun pickUserOrOpenRoot() {
+        if (fetchingUsers) return
+        fetchingUsers = true
+        try {
+            val users = ContainerUsersManager.getUsers(containerName, useCache = false)
+            availableUsers = listOf("root") + users
+            if (users.isEmpty()) addTab("root") else showUserPicker = true
+        } finally {
+            fetchingUsers = false
+        }
+    }
+
+    LaunchedEffect(binder, hostnameReady) {
+        binder ?: return@LaunchedEffect
+        if (!hostnameReady) return@LaunchedEffect
+        if (tabs.isNotEmpty()) return@LaunchedEffect
+        val existing = TerminalSessionService.globalSessionList
+            .filter { (_, info) -> info.containerName == containerName }
+        if (existing.isNotEmpty()) {
+            existing.forEach { (id, info) ->
+                tabs.add(TerminalTab(id = id, user = info.user, label = "${info.user}@$hostname"))
+            }
+            activeTabId = existing.keys.last()
+        } else {
+            pickUserOrOpenRoot()
+        }
     }
 
     fun closeTab(tab: TerminalTab) {
@@ -252,7 +265,7 @@ fun ContainerTerminalScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { showUserPicker = true }) {
+                        IconButton(onClick = { scope.launch { pickUserOrOpenRoot() } }) {
                             Icon(Icons.Default.Add, contentDescription = "New tab")
                         }
                     },
