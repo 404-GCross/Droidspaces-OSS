@@ -3,9 +3,11 @@ package com.droidspaces.app.ui.component
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -17,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -84,41 +87,54 @@ fun DsDialog(
         val gutter = if (isCompactWidth()) 8.dp else 24.dp
         val inner = if (isCompactWidth()) 16.dp else 24.dp
         val clearFocus = rememberClearFocus()
-        Surface(
+        // Compose trims the IME inset by the gap between our view and the window edge.
+        // A view that wraps the Surface changes that gap every time the padding below
+        // resizes it, so the inset chased its own tail and the dialog bounced down, up,
+        // then back to the middle as the keyboard opened. Filling the window keeps the gap
+        // at zero. The cost is that every tap now lands inside our view, so the dialog's
+        // own outside-tap dismissal never fires and the scrim dismisses here instead.
+        Box(
             modifier = Modifier
+                .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.ime)
-                .fillMaxWidth()
-                .padding(horizontal = gutter, vertical = gutter)
-                .heightIn(max = screenHeight - gutter * 2)
-                .then(modifier)
-                // A dialog is its own window, so the ClearFocusOnClickOutside that wraps the
-                // screen never sees these taps and a focused field stayed outlined. A gesture
-                // detector rather than clickable keeps TalkBack from announcing the dialog as
-                // a button.
-                .pointerInput(Unit) { detectTapGestures { clearFocus() } },
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            border = BorderStroke(1.dp, borderColor),
-            tonalElevation = 0.dp
+                .pointerInput(Unit) { detectTapGestures { onDismiss() } },
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.padding(inner),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = gutter, vertical = gutter)
+                    .heightIn(max = screenHeight - gutter * 2)
+                    .then(modifier)
+                    // A dialog is its own window, so the ClearFocusOnClickOutside that wraps the
+                    // screen never sees these taps and a focused field stayed outlined. A gesture
+                    // detector rather than clickable keeps TalkBack from announcing the dialog as
+                    // a button.
+                    .pointerInput(Unit) { detectTapGestures { clearFocus() } },
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(1.dp, borderColor),
+                tonalElevation = 0.dp
             ) {
                 Column(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .then(
-                            if (scrollableContent) {
-                                Modifier.verticalScroll(rememberScrollState())
-                            } else {
-                                Modifier
-                            }
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    content = content
-                )
-                footer?.invoke()
+                    modifier = Modifier.padding(inner),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .then(
+                                if (scrollableContent) {
+                                    Modifier.verticalScroll(rememberScrollState())
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        content = content
+                    )
+                    footer?.invoke()
+                }
             }
         }
     }
