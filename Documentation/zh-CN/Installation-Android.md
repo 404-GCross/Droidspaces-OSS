@@ -6,6 +6,9 @@ desc: Droidspaces 的 Android 分步安装指南。Root 你的设备、安装 AP
 keywords: install, droidspaces, android, rooted, container, apk, atomic, backend, sparse, image, linux
 -->
 
+> [!NOTE]
+> 本页的翻译落后于英文版本，部分内容可能已过时。最新内容请看[英文页面](../Installation-Android.md)。
+
 # Android 安装指南
 
 Droidspaces 在 Android 上旨在提供"零终端"体验。从首次安装到运行完整的 Linux 发行版，一切都通过直观的 Android 应用完成。

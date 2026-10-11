@@ -6,6 +6,9 @@ desc: 社区维护的已通过验证可运行 Droidspaces 的 Android 设备兼�
 keywords: droidspaces, supported, devices, android, device, compatibility, kernel, support, list, hardware
 -->
 
+> [!NOTE]
+> 本页的翻译落后于英文版本，部分内容可能已过时。最新内容请看[英文页面](../community-supported-devices.md)。
+
 # 社区支持的 Android 设备
 
 > [!NOTE]

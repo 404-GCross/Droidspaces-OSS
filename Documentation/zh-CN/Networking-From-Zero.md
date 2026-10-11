@@ -6,6 +6,9 @@ desc: 面向初学者的 Droidspaces 网关模式背后每个网络概念指南�
 keywords: droidspaces, networking, gateway, openwrt, nat, dhcp, dns, lan, wan, veth, bridge, namespace, linux, android
 -->
 
+> [!NOTE]
+> 本页的翻译落后于英文版本，部分内容可能已过时。最新内容请看[英文页面](../Networking-From-Zero.md)。
+
 # 从零开始的网络基础：理解 Droidspaces 网关模式
 
 ### 快速导航
