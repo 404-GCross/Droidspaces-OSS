@@ -31,96 +31,11 @@ Droidspaces 的独特之处在于其对 Android 和 Linux 本身**零依赖**、
 <details>
 <summary><b>项目截图展示 (Linux & Android)</b></summary>
 
-<table align="center">
-  <tr valign="top">
-    <td colspan="3" align="center">
-      <b>Linux 展示</b><br>
-      <i>Ubuntu + 前台模式</i><br>
-      <img src="Documentation/resources/linux/linux-showcase.png" width="95%"><br><br>
-    </td>
-  </tr>
-  <tr valign="top">
-    <td align="center" width="33%">
-      <b>Android 应用主页</b><br>
-      <i>精美的主界面</i><br>
-      <img src="Documentation/resources/gallery/1-home_page.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>Android 容器</b><br>
-      <i>容器菜单中已安装的容器</i><br>
-      <img src="Documentation/resources/gallery/2-containers_tab.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>配置菜单</b><br>
-      <i>主机名和网络模式</i><br>
-      <img src="Documentation/resources/gallery/3_container_configuration.png" width="95%">
-    </td>
-  </tr>
-  <tr valign="top">
-    <td align="center" width="33%">
-      <b>配置菜单</b><br>
-      <i>第一部分，集成与硬件设置</i><br>
-      <img src="Documentation/resources/gallery/4_container_configuration.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>配置菜单</b><br>
-      <i>安全与启动项设置，以及高级选项</i><br>
-      <img src="Documentation/resources/gallery/5_container_configuration.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>日志记录</b><br>
-      <i>容器启动日志</i><br>
-      <img src="Documentation/resources/gallery/6_startup_logs.png" width="95%">
-    </td>
-  </tr>
-  <tr valign="top">
-    <td align="center" width="33%">
-      <b>Android 面板</b><br>
-      <i>仪表盘和门户访问</i><br>
-      <img src="Documentation/resources/gallery/7_panel.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>容器信息</b><br>
-      <i>一站式容器管理</i><br>
-      <img src="Documentation/resources/gallery/8_container_information.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>Systemd 服务</b><br>
-      <i>完整的 systemd 图形管理界面</i><br>
-      <img src="Documentation/resources/gallery/9_systemd_menu.png" width="95%">
-    </td>
-  </tr>
-  <tr valign="top">
-    <td align="center" width="33%">
-      <b>用户选择器</b><br>
-      <i>启动一个终端</i><br>
-      <img src="Documentation/resources/gallery/10_terminal_user_picker.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>终端界面</b><br>
-      <i>喜欢 fastfetch？有的兄弟，有的</i><br>
-      <img src="Documentation/resources/gallery/11_terminal_fastfetch.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>隔离检查</b><br>
-      <i>挂载隔离演示</i><br>
-      <img src="Documentation/resources/gallery/12_mnt_net_isolation.png" width="95%">
-    </td>
-  </tr>
-  <tr valign="top">
-    <td align="center" width="33%">
-      <b>设置页面</b><br>
-      <i>检查运行要求，也可做自定义设置</i><br>
-      <img src="Documentation/resources/gallery/13_settings_screen.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <b>要求检查器</b><br>
-      <i>实时系统检查</i><br>
-      <img src="Documentation/resources/gallery/14_built_in_requirements_checker.png" width="95%">
-    </td>
-    <td align="center" width="33%">
-      <!-- 空单元格用于平衡三列布局 -->
-    </td>
+<table>
+  <tr>
+    <td width="33%" align="center"><img src="../resources/gallery/01-home.png" width="100%"></td>
+    <td width="33%" align="center"><img src="../resources/gallery/02-containers.png" width="100%"></td>
+    <td width="33%" align="center"><img src="../resources/gallery/09-panel.png" width="100%"></td>
   </tr>
 </table>
 
