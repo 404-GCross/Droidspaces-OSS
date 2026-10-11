@@ -1,7 +1,7 @@
 <!--
 title: Kernel configuration
 section: Guides
-order: 3
+order: 5
 desc: How to build an Android kernel with Droidspaces support: the config options and patches for non-GKI and GKI kernels, and how to check the result.
 keywords: kernel, configuration, droidspaces, android, compile, gki, nongki, patches, compatibility, kabi
 -->
@@ -296,3 +296,7 @@ Without these two options everything else works. `--cpus` and `--pids-limit` are
 ## Where to ask
 
 Kernel questions get answered in the [Telegram channel](https://t.me/Droidspaces). The kernel's own option reference is the [kernel documentation](https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html).
+
+---
+
+Previous: [Display, audio and desktop](Graphics-and-Audio.md) | Next: [Recipes](Cool-things-you-can-do.md)

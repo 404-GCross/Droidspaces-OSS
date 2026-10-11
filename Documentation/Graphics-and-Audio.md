@@ -1,7 +1,7 @@
 <!--
 title: Display, audio and desktop
 section: Guides
-order: 2
+order: 4
 desc: GPU acceleration, PulseAudio sound and a desktop environment that starts on its own, for Droidspaces containers on Android and Linux.
 keywords: gpu, acceleration, droidspaces, termux, x11, virgl, turnip, adreno, pulseaudio, sound, audio, desktop, xfce, container, graphics
 -->
@@ -139,3 +139,7 @@ On a Linux host, GPU acceleration needs no bridge: the container uses the host's
 3. Start the container with `--x11`, which mounts the host's X socket, and set `DISPLAY=:0`, or whatever the host uses, in the container's environment file.
 
 Graphical programs started in the container then open on your desktop with hardware acceleration. Sound goes through the host's own PulseAudio or PipeWire socket if you bind-mount it; Droidspaces does not manage audio on Linux.
+
+---
+
+Previous: [Linux CLI](Linux-CLI.md) | Next: [Kernel configuration](Kernel-Configuration.md)

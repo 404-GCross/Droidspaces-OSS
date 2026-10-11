@@ -84,9 +84,8 @@ If you prefer Termux or another terminal app, tap the container's card on the **
 
 **Settings** has a **Requirements** page. **Check Requirements** runs every probe the backend has and tells you which kernel options are missing, which is the first thing to look at when a feature is greyed out in a container's settings.
 
-## Where to next
+---
 
-- [Android app guide](Usage-Android-App.md) for every screen in the app.
-- [Container settings](Features.md) for what each toggle does.
-- [Display, audio and desktop](Graphics-and-Audio.md) to get a desktop on the screen with sound.
-- [Troubleshooting](Troubleshooting.md) if a container does not start.
+Next: [Linux installation](Installation-Linux.md)
+
+On Android you can skip ahead. Read these next: [Android app guide](Usage-Android-App.md), [Container settings](Features.md) and [Display, audio and desktop](Graphics-and-Audio.md).

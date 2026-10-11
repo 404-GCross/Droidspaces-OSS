@@ -1,7 +1,7 @@
 <!--
 title: Android app guide
 section: Guides
-order: 4
+order: 1
 desc: Every screen in the Droidspaces Android app: the Home, Containers and Panel tabs, the container menu, the rootfs repository, the terminal, service management and Settings.
 keywords: droidspaces, android, app, guide, containers, panel, terminal, systemd, services, repository, settings, daemon, mode
 -->
@@ -140,3 +140,7 @@ Pinch to zoom changes the text size. Tapping the terminal opens the keyboard. Th
 ## Where the data is
 
 Everything the backend creates is under `/data/local/Droidspaces`: the binaries in `bin/`, each container's rootfs or image and its `container.config` in `Containers/<name>/`, and logs in `Logs/`. The app only reads and writes there; uninstalling the app does not touch it, and the daemon keeps running.
+
+---
+
+Previous: [Linux installation](Installation-Linux.md) | Next: [Container settings](Features.md)

@@ -1,7 +1,7 @@
 <!--
 title: Community-supported devices
 section: Reference
-order: 3
+order: 2
 desc: Android devices that community members have run Droidspaces on, with kernel sources and downloads.
 keywords: droidspaces, supported, devices, android, device, compatibility, kernel, support, list, hardware
 -->
@@ -268,3 +268,7 @@ When you add or update an entry, follow these rules so the list stays usable:
 - Submit contributions through GitHub pull requests.
 - Update your entry when its status changes, and keep it current.
 - Put the entry in the table that matches its kernel version: 5.4 devices in the 5.4 section, 5.10 devices in the 5.10 section, and so on. This keeps the list readable and cheaper to maintain.
+
+---
+
+Previous: [Troubleshooting](Troubleshooting.md) | Next: [NixOS](Nix-NixOS.md)

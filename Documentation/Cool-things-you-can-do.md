@@ -187,3 +187,7 @@ systemctl enable --now wifi-watchdog
 ```
 
 Turn on **Run at Boot** for this container too.
+
+---
+
+Previous: [Kernel configuration](Kernel-Configuration.md) | Next: [Troubleshooting](Troubleshooting.md)

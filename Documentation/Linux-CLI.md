@@ -1,7 +1,7 @@
 <!--
 title: Linux CLI
 section: Guides
-order: 5
+order: 3
 desc: Reference for the droidspaces command line: every command, every flag, and the config file keys.
 keywords: droidspaces, cli, linux, container, command, line, reference, flags, config, file
 -->
@@ -165,3 +165,7 @@ sudo droidspaces --format show
 | `<workspace>/Logs/<name>/` | logs of each start, stop and restart |
 | `<workspace>/Logs/droidspacesd.log` | the daemon's log |
 | `/mnt/Droidspaces/<name>` | where an image rootfs is mounted while the container runs |
+
+---
+
+Previous: [Container settings](Features.md) | Next: [Display, audio and desktop](Graphics-and-Audio.md)

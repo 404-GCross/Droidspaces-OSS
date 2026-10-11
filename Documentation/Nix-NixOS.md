@@ -1,7 +1,7 @@
 <!--
 title: Nix/NixOS
 section: Reference
-order: 4
+order: 3
 desc: Run NixOS in a Droidspaces container: build a tarball, import the compatibility module, and try the experimental Finix system.
 keywords: nixos, droidspaces, nix, container, android, finix, containerized
 -->
@@ -61,3 +61,7 @@ Finix is an experimental NixOS-like system that uses finit as its init instead o
 ```sh
 nix build github:ravindu644/Droidspaces-OSS#finixDroidspacesTarballs.aarch64-linux.experimental
 ```
+
+---
+
+Previous: [Community-supported devices](community-supported-devices.md) | Next: [Uninstallation](Uninstallation.md)

@@ -127,3 +127,7 @@ If the controller has no row at all in `/proc/cgroups`, the kernel is 6.12 or ne
 3. From the CLI, start with `--foreground` to watch the boot on your terminal.
 4. In the app, **Settings**, **Generate a bug report** collects logs and device details into one file.
 5. Ask in the [Telegram channel](https://t.me/Droidspaces) or open a [GitHub issue](https://github.com/ravindu644/Droidspaces-OSS/issues) with that file attached.
+
+---
+
+Previous: [Recipes](Cool-things-you-can-do.md) | Next: [Community-supported devices](community-supported-devices.md)

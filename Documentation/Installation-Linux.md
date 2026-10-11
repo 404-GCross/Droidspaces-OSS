@@ -91,8 +91,6 @@ sudo systemctl enable --now droidspaces
 
 The unit expects the binary at `/usr/bin/droidspaces`, which is where the `.deb` puts it. Edit `ExecStart` if yours is elsewhere. Log out and in again for the group to apply.
 
-## Where to next
+---
 
-- [Linux CLI](Linux-CLI.md) for every command, flag and config key.
-- [Container settings](Features.md) for what each flag does and when to use it.
-- [Networking from zero](Networking-From-Zero.md) for the network modes.
+Previous: [Android installation](Installation-Android.md) | Next: [Android app guide](Usage-Android-App.md)

@@ -1,7 +1,7 @@
 <!--
 title: Container settings
 section: Guides
-order: 1
+order: 2
 desc: Every container setting in Droidspaces, in the order the app shows them: what each toggle or flag does, when to turn it on, and what it needs from the kernel.
 keywords: droidspaces, settings, features, network, mode, hardware, access, gpu, volatile, bind, mount, resource, limits, privileged, sandboxing, run, at, boot
 -->
@@ -173,3 +173,7 @@ Chosen once, when the container is installed.
 **Hostname.** `--hostname=NAME`, key `hostname`. Defaults to the container name.
 
 **Foreground mode.** `--foreground` on the CLI attaches your terminal to the container's console for the whole boot, which is the best way to see why a container does not come up.
+
+---
+
+Previous: [Android app guide](Usage-Android-App.md) | Next: [Linux CLI](Linux-CLI.md)

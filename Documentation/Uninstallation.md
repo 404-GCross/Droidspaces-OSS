@@ -1,7 +1,7 @@
 <!--
 title: Uninstallation
 section: Reference
-order: 5
+order: 4
 desc: Remove Droidspaces from Android or Linux: containers, the backend and its data, the boot module, and the app.
 keywords: uninstall, droidspaces, remove, android, delete, rootfs, cleanup, container, runtime, backend, data
 -->
@@ -40,3 +40,7 @@ sudo rm -f /usr/local/bin/droidspaces     # if installed from the tarball
 ```
 
 Rootfs directories and images you created yourself are wherever you put them.
+
+---
+
+Previous: [NixOS](Nix-NixOS.md) | Back to the start: [Android installation](Installation-Android.md)
