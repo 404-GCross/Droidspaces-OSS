@@ -26,12 +26,19 @@
 
 #include "display_daemon.h"
 
-/* Per-container Pids-dir filenames (keyed by container name). */
-static void anland_pid_file(const struct ds_config *cfg, char *buf, size_t n) {
-  snprintf(buf, n, "%s.anland.pid", cfg->container_name);
-}
-static void anland_sock_file(const struct ds_config *cfg, char *buf, size_t n) {
-  snprintf(buf, n, "%s.anland", cfg->container_name);
+/* Per-container record names in the Pids dir, keyed by the sanitized name
+ * like every other file there. The extensions are deliberately not
+ * DS_EXT_PID: every Pids scanner treats <x>.pid as a container named x, so a
+ * daemon pid file named <name>.anland.pid showed up as a phantom container and
+ * left a .lock behind when the daemon died. Siblings use .xpid and .vpid. */
+#define ANLAND_PID_EXT ".apid"
+#define ANLAND_SOCK_EXT ".asock"
+
+static void anland_record_name(const struct ds_config *cfg, const char *ext,
+                               char *buf, size_t n) {
+  char safe[NAME_MAX + 1];
+  sanitize_container_name(cfg->container_name, safe, sizeof(safe));
+  snprintf(buf, n, "%s%s", safe, ext);
 }
 
 /* anland is per-container, so a daemon is never shared between containers:
@@ -67,13 +74,13 @@ static void anland_child(int ready_fd, void *user_data) {
   _exit(0);
 }
 
-/* Load the recorded per-container socket path (Pids/<name>.anland) into
+/* Load the recorded per-container socket path (Pids/<name>.asock) into
  * cfg->anland_sock. No-op when the file is missing/empty. Needed because the
  * socket path is runtime-only (not persisted to container.config), so a cfg
  * loaded from disk at stop time has an empty anland_sock. */
 void ds_anland_load_sock(struct ds_config *cfg) {
   char sockfile[NAME_MAX + 16], rec[PATH_MAX];
-  anland_sock_file(cfg, sockfile, sizeof(sockfile));
+  anland_record_name(cfg, ANLAND_SOCK_EXT, sockfile, sizeof(sockfile));
   snprintf(rec, sizeof(rec), "%s/%s", get_pids_dir(), sockfile);
   if (read_file(rec, cfg->anland_sock, sizeof(cfg->anland_sock)) < 0) {
     cfg->anland_sock[0] = '\0';
@@ -93,8 +100,8 @@ int ds_anland_daemon_start(struct ds_config *cfg) {
   }
 
   char pidfile[NAME_MAX + 16], sockfile[NAME_MAX + 16];
-  anland_pid_file(cfg, pidfile, sizeof(pidfile));
-  anland_sock_file(cfg, sockfile, sizeof(sockfile));
+  anland_record_name(cfg, ANLAND_PID_EXT, pidfile, sizeof(pidfile));
+  anland_record_name(cfg, ANLAND_SOCK_EXT, sockfile, sizeof(sockfile));
 
   /* Reuse an existing live daemon (ds_daemon_read_pid verifies liveness). */
   pid_t existing = ds_daemon_read_pid(pidfile);
@@ -153,8 +160,8 @@ void ds_anland_daemon_stop(struct ds_config *cfg) {
   if (!cfg)
     return;
   char pidfile[NAME_MAX + 16], sockfile[NAME_MAX + 16];
-  anland_pid_file(cfg, pidfile, sizeof(pidfile));
-  anland_sock_file(cfg, sockfile, sizeof(sockfile));
+  anland_record_name(cfg, ANLAND_PID_EXT, pidfile, sizeof(pidfile));
+  anland_record_name(cfg, ANLAND_SOCK_EXT, sockfile, sizeof(sockfile));
 
   /* Recover the socket path from the Pids file if this cfg was loaded from disk
    * (anland_sock is runtime-only), so ds_global_daemon_stop can unlink it. */
