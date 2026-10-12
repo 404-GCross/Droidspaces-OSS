@@ -99,13 +99,17 @@ fun ContainerConfigForm(
     LifecycleResumeEffect(Unit) { HostCapabilities.refreshApps(context); onPauseOrDispose {} }
     val termux = ok("termux")
     val tx11 = termux && ok("termux_x11")
+    val anland = ok("anland")
+    val gpu = state.enableHwAccess || state.enableGpuMode
 
     val isSeccompDisabled = privilegedTags(state.privileged).let { "noseccomp" in it || "full" in it }
     val usernsSupported = ok("user_ns")
 
     // One pass: drop what the kernel cannot do, then the seccomp rule, then a
     // single state write so the Edit screen sees one change, not several.
-    LaunchedEffect(caps, isSeccompDisabled, state.netMode) {
+    // Keyed on gpu too, so turning GPU or Hardware Access off takes Anland
+    // down with it instead of leaving it checked behind a greyed switch.
+    LaunchedEffect(caps, isSeccompDisabled, state.netMode, gpu) {
         var s = caps?.coerce(state) ?: state
         if (isSeccompDisabled && usernsSupported) s = s.copy(allowSandboxing = true)
         if (s != state) onStateChange(s)
@@ -206,19 +210,28 @@ fun ContainerConfigForm(
         SwitchItem(
             painter = painterResource(R.drawable.ic_x11),
             title = context.getString(R.string.termux_x11),
-            summary = if (tx11) context.getString(R.string.termux_x11_description)
-                else context.getString(R.string.termux_x11_not_installed),
+            summary = when {
+                !tx11 -> context.getString(R.string.termux_x11_not_installed)
+                state.enableAnland -> context.getString(R.string.anland_replaces_x11)
+                else -> context.getString(R.string.termux_x11_description)
+            },
             checked = state.enableTermuxX11,
-            enabled = tx11,
+            enabled = tx11 && !state.enableAnland,
             onCheckedChange = { clearFocus(); onStateChange(state.copy(enableTermuxX11 = it)) }
         )
         GroupDivider()
         SwitchItem(
             icon = Icons.Default.DesktopWindows,
             title = context.getString(R.string.enable_anland),
-            summary = context.getString(R.string.enable_anland_description),
+            summary = when {
+                !anland -> context.getString(R.string.anland_not_installed)
+                !gpu -> context.getString(R.string.anland_needs_gpu)
+                else -> context.getString(R.string.enable_anland_description)
+            },
             checked = state.enableAnland,
-            onCheckedChange = { clearFocus(); onStateChange(state.copy(enableAnland = it)) }
+            enabled = anland && gpu,
+            // The two display paths set conflicting services and variables.
+            onCheckedChange = { clearFocus(); onStateChange(state.copy(enableAnland = it, enableTermuxX11 = state.enableTermuxX11 && !it)) }
         )
         GroupDivider()
         SwitchItem(

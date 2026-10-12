@@ -30,6 +30,7 @@ import com.droidspaces.app.util.ContainerProcdManager
 import com.droidspaces.app.util.ContainerOpenRCManager
 import com.droidspaces.app.util.ContainerDiskUsageManager
 import com.droidspaces.app.util.AnlandUtils
+import com.droidspaces.app.ui.util.showError
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.droidspaces.app.util.AnimationUtils
@@ -66,6 +67,7 @@ fun ContainerDetailsScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
     // Pre-load cached OS info for instant display - zero delay
@@ -254,13 +256,20 @@ fun ContainerDetailsScreen(
             item(key = "terminal_${container.name}") {
                 TerminalCard(
                     containerName = container.name,
-                    onOpenTerminal = onNavigateToTerminal,
-                    // Socket path comes with the heartbeat; presence gates the button
-                    anlandEnabled = container.enableAnland && osInfo?.anlandSocket != null,
-                    onLaunchAnland = {
-                        osInfo?.anlandSocket?.let { AnlandUtils.launchWindow(context, container.name, it) }
-                    }
+                    onOpenTerminal = onNavigateToTerminal
                 )
+            }
+
+            if (container.enableAnland) {
+                item(key = "anland_${container.name}") {
+                    AnlandCard(
+                        socketPath = osInfo?.anlandSocket,
+                        onLaunch = { socketPath ->
+                            if (!AnlandUtils.launchWindow(context, container.name, socketPath))
+                                scope.showError(snackbarHostState, context.getString(R.string.anland_not_installed))
+                        }
+                    )
+                }
             }
 
             item(key = "systemd_${container.name}") {
@@ -379,8 +388,6 @@ private fun IdentityToken(
 private fun TerminalCard(
     containerName: String,
     onOpenTerminal: () -> Unit,
-    anlandEnabled: Boolean = false,
-    onLaunchAnland: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -412,7 +419,7 @@ private fun TerminalCard(
     ) {
       Column(
           modifier = Modifier.fillMaxWidth().padding(20.dp),
-          verticalArrangement = Arrangement.spacedBy(14.dp)
+          verticalArrangement = Arrangement.spacedBy(12.dp)
       ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -468,30 +475,6 @@ private fun TerminalCard(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     if (sessionCount > 0) context.getString(R.string.restore) else context.getString(R.string.open),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-
-        // Launch the anland desktop window, shown only when this container has
-        // the anland display daemon enabled and a live socket recorded.
-        if (anlandEnabled) {
-            Button(
-                onClick = onLaunchAnland,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Icon(
-                    Icons.Default.DesktopWindows,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    context.getString(R.string.launch_anland_window),
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -735,6 +718,86 @@ private fun PremiumInitSystemCard(
     }
 }
 
+
+/**
+ * Opens the container's Wayland desktop in the Anland app. Listed only for a
+ * container with Anland Display on. The button waits for the broker's socket,
+ * which the heartbeat reports once the container has started.
+ */
+@Composable
+private fun AnlandCard(
+    socketPath: String?,
+    onLaunch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = AnimationUtils.cardFadeSpec(),
+        label = "anland_card_fade"
+    )
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 88.dp)
+            .alpha(alpha)
+            .graphicsLayer { this.alpha = alpha },
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DesktopWindows,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Column {
+                    Text(
+                        text = context.getString(R.string.anland_option),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = context.getString(R.string.enable_anland_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            Button(
+                onClick = { socketPath?.let(onLaunch) },
+                enabled = socketPath != null,
+                modifier = Modifier.widthIn(min = 140.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(context.getString(R.string.launch_anland_window), fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
 
 /**
  * Dynamic Height Synced Grid - measures all items and applies max height to all.
