@@ -24,9 +24,11 @@ import com.droidspaces.app.ui.component.RootUnavailableState
 import com.droidspaces.app.ui.component.PullToRefreshWrapper
 import com.droidspaces.app.ui.component.RunningContainerCard
 import com.droidspaces.app.ui.util.AnimatedListEntry
+import com.droidspaces.app.ui.util.showError
 import com.droidspaces.app.ui.util.rememberAnimatedEntries
 import com.droidspaces.app.ui.viewmodel.ContainerViewModel
 import com.droidspaces.app.ui.viewmodel.SystemStatsViewModel
+import com.droidspaces.app.util.AnlandUtils
 import androidx.compose.ui.platform.LocalContext
 import com.droidspaces.app.R
 
@@ -49,6 +51,7 @@ fun ControlPanelScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val systemStatsViewModel: SystemStatsViewModel = viewModel()
 
     // Get running containers - derived from ViewModel state
@@ -106,6 +109,8 @@ fun ControlPanelScreen(
                     ) {
                         entries.forEach { entry ->
                             val container = entry.item
+                            // Socket path comes with the heartbeat; presence gates the pill
+                            val anlandSock = containerUsageMap[container.name]?.anlandSocket
                             // Keyed, so a card's state stays with its container when one leaves.
                             key(entry.key) {
                                 AnimatedListEntry(entry) {
@@ -116,6 +121,11 @@ fun ControlPanelScreen(
                                         },
                                         onTerminalClick = {
                                             onNavigateToTerminal(container.name)
+                                        },
+                                        anlandEnabled = container.enableAnland && anlandSock != null,
+                                        onLaunchAnland = {
+                                            if (anlandSock != null && !AnlandUtils.launchWindow(context, container.name, anlandSock))
+                                                scope.showError(snackbarHostState, context.getString(R.string.anland_not_installed))
                                         },
                                         osInfo = containerUsageMap[container.name],
                                     )
