@@ -1054,7 +1054,8 @@ int main(int argc, char **argv) {
 
   /* If we have a name but haven't successfully loaded a config file yet, load
    * by name. Skip for comma-separated names - ds_multi_* handles those. */
-  if (!loaded && cfg.container_name[0] != '\0' && !strchr(raw_names, ',')) {
+  int multi = strchr(raw_names, ',') != NULL;
+  if (!loaded && cfg.container_name[0] != '\0' && !multi) {
     if (ds_config_load_by_name(cfg.container_name, &cfg) < 0) {
       /* If loading by name fails and it's a stateful command, maybe the
        * container was moved or renamed. Perform a recovery scan of running
@@ -1093,8 +1094,11 @@ int main(int argc, char **argv) {
 
   const char *cmd = argv[optind];
 
-  /* Set up global logging context for centralized logging engine */
-  if (cfg.container_name[0] != '\0') {
+  /* Set up global logging context for centralized logging engine. A
+   * comma-separated list is not a container; ds_multi_stop() sets the name
+   * per token, and a copy here would create a log folder named after the
+   * whole list. */
+  if (cfg.container_name[0] != '\0' && !multi) {
     safe_strncpy(ds_log_container_name, cfg.container_name,
                  sizeof(ds_log_container_name));
   }
@@ -1141,7 +1145,7 @@ int main(int argc, char **argv) {
 
   /* start/restart: single container only */
   if (strcmp(cmd, "start") == 0) {
-    if (strchr(raw_names, ',')) {
+    if (multi) {
       ds_error("start does not support multiple containers.");
       ret = 1;
       goto cleanup;
@@ -1169,13 +1173,12 @@ int main(int argc, char **argv) {
   }
 
   if (strcmp(cmd, "stop") == 0) {
-    ret = strchr(raw_names, ',') ? ds_multi_stop(raw_names)
-                                 : stop_rootfs(&cfg, 0);
+    ret = multi ? ds_multi_stop(raw_names) : stop_rootfs(&cfg, 0);
     goto cleanup;
   }
 
   if (strcmp(cmd, "restart") == 0) {
-    if (strchr(raw_names, ',')) {
+    if (multi) {
       ds_error("restart does not support multiple containers.");
       ret = 1;
       goto cleanup;

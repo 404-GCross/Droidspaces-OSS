@@ -2078,10 +2078,14 @@ int ds_multi_stop(const char *raw_names) {
     struct ds_config c;
     init_iter_cfg(&c, NULL);
     safe_strncpy(c.container_name, tok, sizeof(c.container_name));
+    /* ds_log() keys the log file by this global, not by the config it is
+     * handed, so point it at the container being stopped. */
+    safe_strncpy(ds_log_container_name, tok, sizeof(ds_log_container_name));
     if (stop_rootfs(&c, 0) != 0)
       ret = 1;
     tok = strtok_r(NULL, ",", &sp);
   }
+  ds_log_container_name[0] = '\0';
   return ret;
 }
 
