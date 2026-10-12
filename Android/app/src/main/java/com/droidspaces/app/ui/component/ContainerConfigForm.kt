@@ -217,7 +217,7 @@ fun ContainerConfigForm(
             },
             checked = state.enableTermuxX11,
             enabled = tx11 && !state.enableAnland,
-            onCheckedChange = { clearFocus(); onStateChange(state.copy(enableTermuxX11 = it)) }
+            onCheckedChange = { clearFocus(); onStateChange(state.copy(enableTermuxX11 = it, enableAnland = state.enableAnland && !it)) }
         )
         GroupDivider()
         SwitchItem(
@@ -226,10 +226,11 @@ fun ContainerConfigForm(
             summary = when {
                 !anland -> context.getString(R.string.anland_not_installed)
                 !gpu -> context.getString(R.string.anland_needs_gpu)
+                state.enableTermuxX11 -> context.getString(R.string.x11_replaces_anland)
                 else -> context.getString(R.string.enable_anland_description)
             },
             checked = state.enableAnland,
-            enabled = anland && gpu,
+            enabled = anland && gpu && !state.enableTermuxX11,
             // The two display paths set conflicting services and variables.
             onCheckedChange = { clearFocus(); onStateChange(state.copy(enableAnland = it, enableTermuxX11 = state.enableTermuxX11 && !it)) }
         )
