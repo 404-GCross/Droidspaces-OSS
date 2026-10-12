@@ -25,10 +25,8 @@ import com.droidspaces.app.ui.component.ContainerUsersCard
 import com.droidspaces.app.ui.component.DsSnackbarHost
 import com.droidspaces.app.util.ContainerInfo
 import com.droidspaces.app.util.ContainerOSInfoManager
-import com.droidspaces.app.util.ContainerSystemdManager
-import com.droidspaces.app.util.ContainerProcdManager
-import com.droidspaces.app.util.ContainerOpenRCManager
 import com.droidspaces.app.util.ContainerDiskUsageManager
+import com.droidspaces.app.util.ContainerUsersManager
 import com.droidspaces.app.util.AnlandUtils
 import com.droidspaces.app.ui.util.showError
 import kotlinx.coroutines.delay
@@ -68,7 +66,6 @@ fun ContainerDetailsScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var refreshTrigger by remember { mutableIntStateOf(0) }
 
     // Pre-load cached OS info for instant display - zero delay
     // Uses persistent cache that survives app restarts
@@ -87,16 +84,17 @@ fun ContainerDetailsScreen(
         )
     }
 
+    // Seeded from the cache; null keeps the users card on its loader until the probe answers
+    var users by remember { mutableStateOf(ContainerUsersManager.getCachedUsers(container.name)) }
+
     LaunchedEffect(container.name) {
-        initSystemState = when {
-            ContainerSystemdManager.isSystemdAvailable(container.name) ->
-                InitSystemCardState.Available(InitSystem.SYSTEMD)
-            ContainerProcdManager.isProcdAvailable(container.name) ->
-                InitSystemCardState.Available(InitSystem.PROCD)
-            ContainerOpenRCManager.isOpenRCAvailable(container.name) ->
-                InitSystemCardState.Available(InitSystem.OPENRC)
-            else ->
-                InitSystemCardState.NotAvailable
+        val probe = ContainerUsersManager.probe(container.name)
+        users = probe?.second ?: users ?: emptyList()
+        initSystemState = when (probe?.first) {
+            "systemd" -> InitSystemCardState.Available(InitSystem.SYSTEMD)
+            "procd" -> InitSystemCardState.Available(InitSystem.PROCD)
+            "openrc" -> InitSystemCardState.Available(InitSystem.OPENRC)
+            else -> InitSystemCardState.NotAvailable
         }
     }
 
@@ -127,9 +125,6 @@ fun ContainerDetailsScreen(
                     if (currentInfo == null || hasOSInfoChanged(currentInfo, newOSInfo)) {
                         osInfo = newOSInfo
                     }
-
-                    // Refresh users on the first run, then leave it to manual/specific refreshes
-                    if (refreshTrigger == 0) refreshTrigger++
                 } catch (e: Exception) {
                     // Silently ignore refresh errors to keep the UI smooth
                 }
@@ -244,11 +239,11 @@ fun ContainerDetailsScreen(
                 }
             }
 
-            // Users Card - Stable key (don't include refreshTrigger to prevent recreation)
             item(key = "users_${container.name}") {
                 ContainerUsersCard(
                     containerName = container.name,
-                    refreshTrigger = refreshTrigger,
+                    users = users,
+                    onRefresh = { users = ContainerUsersManager.getUsers(container.name, useCache = false) },
                     snackbarHostState = snackbarHostState
                 )
             }

@@ -23,7 +23,7 @@ import com.droidspaces.app.ui.util.rememberClearFocus
 import androidx.compose.ui.unit.dp
 import com.droidspaces.app.util.Constants
 import com.droidspaces.app.util.ContainerCommandBuilder
-import com.droidspaces.app.util.ContainerUsersManager
+import com.droidspaces.app.util.PreferencesManager
 import com.droidspaces.app.ui.util.LoadingIndicator
 import com.droidspaces.app.ui.util.LoadingSize
 import com.droidspaces.app.ui.util.showSuccess
@@ -36,7 +36,8 @@ import com.droidspaces.app.R
 @Composable
 fun ContainerUsersCard(
     containerName: String,
-    refreshTrigger: Int = 0,
+    users: List<String>?,
+    onRefresh: suspend () -> Unit,
     snackbarHostState: SnackbarHostState? = null,
     modifier: Modifier = Modifier
 ) {
@@ -44,46 +45,27 @@ fun ContainerUsersCard(
     val context = LocalContext.current
     val clearFocus = rememberClearFocus()
 
-    // Use cached value initially for instant display
-    var users by remember {
-        mutableStateOf<List<String>>(
-            ContainerUsersManager.getCachedUsers(containerName) ?: emptyList()
-        )
-    }
-    var isLoading by remember {
-        mutableStateOf(ContainerUsersManager.getCachedUsers(containerName) == null)
-    }
+    // Null means the screen is still probing the container
+    val isLoading = users == null
 
     // Available users list: always include "root", plus any local users
     val availableUsers = remember(users) {
-        val userList = users.toMutableList()
+        val userList = users.orEmpty().toMutableList()
         if (!userList.contains("root")) {
             userList.add(0, "root") // Add root at the beginning if not present
         }
         userList
     }
 
-    // Selected user state - default to "root"
-    var selectedUser by remember { mutableStateOf("root") }
-
-    // Update selected user when users list changes (keep current selection if still valid)
-    LaunchedEffect(users) {
-        if (!availableUsers.contains(selectedUser)) {
-            selectedUser = "root"
-        }
+    // Same preselection as the terminal's user picker
+    var selectedUser by remember {
+        mutableStateOf(PreferencesManager.getInstance(context).getLastTerminalUser(containerName) ?: "root")
     }
 
-
-    LaunchedEffect(containerName, refreshTrigger) {
-        scope.launch {
-            // Only show loading if we don't have cached data (first load)
-            // Don't show loading on refresh to prevent glitches
-            val shouldShowLoading = users.isEmpty() && refreshTrigger == 0
-            if (shouldShowLoading) {
-                isLoading = true
-            }
-            users = ContainerUsersManager.getUsers(containerName, useCache = refreshTrigger == 0)
-            isLoading = false
+    // Skipped while loading, or the remembered user is reset before the list arrives
+    LaunchedEffect(users) {
+        if (!isLoading && !availableUsers.contains(selectedUser)) {
+            selectedUser = "root"
         }
     }
 
@@ -136,7 +118,7 @@ fun ContainerUsersCard(
                     contentDescription = context.getString(R.string.refresh_users),
                     onRefresh = {
                         clearFocus()
-                        users = ContainerUsersManager.getUsers(containerName, useCache = false)
+                        onRefresh()
                     },
                     modifier = Modifier.size(40.dp),
                     iconSize = 20.dp,
@@ -154,7 +136,7 @@ fun ContainerUsersCard(
                 ) {
                     LoadingIndicator(size = LoadingSize.Medium)
                 }
-            } else if (users.isEmpty()) {
+            } else if (users.isNullOrEmpty()) {
                 Text(
                     text = context.getString(R.string.no_local_users_found),
                     style = MaterialTheme.typography.bodyLarge,
@@ -173,7 +155,7 @@ fun ContainerUsersCard(
                             clearFocus()
                         }
                 ) {
-                    users.forEach { user ->
+                    users.orEmpty().forEach { user ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
