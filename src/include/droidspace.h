@@ -205,7 +205,7 @@ int check_ns(int flag, const char *name);
 /* Networking modes */
 
 enum ds_net_mode {
-  DS_NET_HOST = 0, /* share host network namespace (default) */
+  DS_NET_HOST = 0, /* share host network namespace               */
   DS_NET_NAT,      /* isolated netns + bridge + MASQUERADE      */
   DS_NET_NONE,     /* isolated netns with loopback only          */
   DS_NET_GATEWAY,  /* isolated netns attached to gateway LAN     */
