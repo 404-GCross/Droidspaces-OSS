@@ -24,7 +24,10 @@
  * somebody still responsible for this container's leftovers? */
 
 #define DS_EXT_MONITOR ".monitor"
+#define DS_EXT_HELPERS ".helpers"
 
+/* Four is enough: a monitor holds at most supervision, helpers and, while it
+ * acts on its container's exit, the lifecycle lock. */
 static int g_held_locks[4] = {-1, -1, -1, -1};
 
 /* A lock belongs to the process that took it. flock() locks live on the open
@@ -152,6 +155,43 @@ void ds_container_claim_supervision(const char *name) {
   char path[PATH_MAX];
   if (get_lock_path(name, DS_EXT_MONITOR, path, sizeof(path)) == 0)
     lock_file(path, LOCK_SH);
+}
+
+/* Held by the monitor for exactly the life of its route monitor thread. That
+ * thread reinstalls the shared NAT rules whenever it finds them missing, and
+ * it lives in the monitor process, so a stop command cannot join it; it waits
+ * for this lock instead. Non-blocking: a monitor left behind by an unkillable
+ * init still holds its lock, and a new instance must boot past it rather than
+ * hang in its handshake. Returns an fd for ds_container_unlock(), or -1. */
+int ds_container_lock_helpers(const char *name) {
+  char path[PATH_MAX];
+  if (get_lock_path(name, DS_EXT_HELPERS, path, sizeof(path)) < 0)
+    return -1;
+  return lock_file(path, LOCK_EX | LOCK_NB);
+}
+
+/* Wait until the helpers lock is free, or timeout_ms has passed. A free lock
+ * (no monitor, or one from a build before this lock) returns at once. On
+ * timeout carry on anyway: that is no worse than before the lock existed, and
+ * the holder is then a monitor that is wedged, not one winding down. */
+void ds_container_wait_helpers(const char *name, int timeout_ms) {
+  char path[PATH_MAX];
+  if (get_lock_path(name, DS_EXT_HELPERS, path, sizeof(path)) < 0)
+    return;
+  for (int waited = 0;; waited += 20) {
+    int fd = lock_file(path, LOCK_EX | LOCK_NB);
+    if (fd >= 0) {
+      unlock_file(fd);
+      return;
+    }
+    if (waited >= timeout_ms) {
+      ds_warn("Could not confirm that the monitor for '%s' stopped its "
+              "network helpers - proceeding with cleanup",
+              name);
+      return;
+    }
+    usleep(20000);
+  }
 }
 
 /* For the pruners: take the lifecycle lock only if nobody is in the middle of
@@ -1127,6 +1167,13 @@ static int stop_rootfs_locked(struct ds_config *caller_cfg, int skip_unmount,
     snprintf(fw_path, sizeof(fw_path), "%s/lib/firmware", cfg->img_mount_point);
     firmware_path_remove(fw_path);
   }
+
+  /* The monitor's route monitor thread puts the shared NAT rules back when it
+   * finds them missing, and only the monitor can join it. Wait for that before
+   * pulling the rules, or they come back and nobody removes them: the monitor
+   * concedes the cleanup to us once it sees the pidfile gone. */
+  if (!unkillable)
+    ds_container_wait_helpers(cfg->container_name, 5000);
 
   /* 5. Complete resource cleanup. */
   cleanup_container_resources(cfg, pid, skip_unmount, unkillable);

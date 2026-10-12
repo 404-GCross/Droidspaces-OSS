@@ -284,6 +284,9 @@ static int g_current_gw6_table = 0; /* same, for the uplink's IPv6 routes */
 static pthread_mutex_t g_gw_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int g_route_monitor_sock = -1;
 static volatile sig_atomic_t g_stop_monitor = 0;
+/* Helpers lock, held for exactly as long as the route monitor thread lives so
+ * a stop command can wait for it. See ds_container_lock_helpers(). */
+static int g_helpers_fd = -1;
 static pthread_t g_route_monitor_tid;
 static int g_route_monitor_started = 0; /* loop active; guarded by g_gw_mutex */
 static int g_route_monitor_needs_join = 0; /* thread created, not yet joined;
@@ -2553,6 +2556,10 @@ static void *route_monitor_loop(void *arg) {
     }
 
     if (pr == 0) {
+      /* A stop that landed during the sleep must not get one more reprobe:
+       * it would put back rules a stop command is about to remove. */
+      if (g_stop_monitor)
+        break;
       do_uplink_reprobe();
       continue;
     }
@@ -2696,11 +2703,14 @@ void ds_net_stop_route_monitor(void) {
     g_route_monitor_started = 0;
     pthread_mutex_unlock(&g_gw_mutex);
   }
+  /* Joined, so nothing in this process can re-add host rules now. */
+  ds_container_unlock(g_helpers_fd);
+  g_helpers_fd = -1;
 }
 
 void ds_net_mark_local_forward_active(void) { g_local_forward_active = 1; }
 
-void ds_net_start_route_monitor(void) {
+void ds_net_start_route_monitor(const char *container_name) {
   if (!is_android())
     return;
 
@@ -2729,8 +2739,12 @@ void ds_net_start_route_monitor(void) {
 
   pthread_mutex_lock(&g_gw_mutex);
   g_stop_monitor = 0;
+  if (g_helpers_fd < 0)
+    g_helpers_fd = ds_container_lock_helpers(container_name);
   if (ds_thread_create(&g_route_monitor_tid, route_monitor_loop, NULL) != 0) {
     ds_warn("[NET] Failed to start route monitor thread: %s", strerror(errno));
+    ds_container_unlock(g_helpers_fd);
+    g_helpers_fd = -1;
   } else {
     g_route_monitor_started = 1;
     g_route_monitor_needs_join = 1;

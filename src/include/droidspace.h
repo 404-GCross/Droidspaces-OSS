@@ -558,6 +558,8 @@ int ds_container_lock(const char *name, int wait);
 void ds_container_unlock(int fd);
 int ds_container_lock_orphan(const char *name);
 void ds_container_claim_supervision(const char *name);
+int ds_container_lock_helpers(const char *name);
+void ds_container_wait_helpers(const char *name, int timeout_ms);
 void ds_android_helpers_sync(struct ds_config *cfg);
 int wait_for_socket_or_death(pid_t pid, const char *path, int timeout_ms,
                              int interval_us);
@@ -779,7 +781,7 @@ int setup_veth_child_side_named(struct ds_config *cfg, const char *peer_name,
 void ds_net_derive_handshake(pid_t init_pid, struct ds_config *cfg,
                              struct ds_net_handshake *hs);
 void ds_net_cleanup(struct ds_config *cfg, pid_t container_pid);
-void ds_net_start_route_monitor(void);
+void ds_net_start_route_monitor(const char *container_name);
 void ds_net_stop_route_monitor(void);
 /* Marks route_localnet as required; route monitor re-asserts it every cycle
  * (same pattern as ip_forward). Called once port-forward rules with localhost

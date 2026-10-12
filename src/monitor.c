@@ -375,7 +375,7 @@ reboot_loop:;
         } else {
           /* Start the dynamic route monitor thread to handle WiFi/Mobile
            * switches */
-          ds_net_start_route_monitor();
+          ds_net_start_route_monitor(cfg->container_name);
         }
       } else if (cfg->net_mode == DS_NET_GATEWAY) {
         if (setup_gateway_veth_side(cfg, netns_pid) < 0) {
