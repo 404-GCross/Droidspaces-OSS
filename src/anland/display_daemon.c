@@ -8,6 +8,8 @@
  *     app connects through its su helper, which hands the fd over and exits,
  *     so only the uid can be checked, never the pid. The producer must come
  *     from inside a container. Anyone else is dropped.
+ *   - a client gets a read and write timeout, so a peer that connects and
+ *     says nothing cannot wedge the single-threaded loop.
  *   - every fd a message carries is either deposited or closed, and the fd
  *     set is accepted and delivered at the same count.
  *   - a client dropped during an epoll batch is freed after the batch, so a
@@ -30,6 +32,10 @@
 #define MAX_EVENTS 16
 /* Consumer fd set: { buf_ready, fence, data, shm, audio }. */
 #define MAX_FDS 5
+/* ponytail: a per-client timeout, not a non-blocking state machine. A hostile
+ * peer can still hold the loop for this long per connection; it can only be a
+ * process in the container whose own display it would be stalling. */
+#define CLIENT_IO_TIMEOUT_S 2
 
 #define dlog(...) fprintf(stderr, "daemon: " __VA_ARGS__)
 
@@ -260,6 +266,10 @@ static void handle_new_connection(daemon_ctx *ctx) {
   int fd = accept4(ctx->listen_fd, NULL, NULL, SOCK_CLOEXEC);
   if (fd < 0)
     return;
+
+  struct timeval tv = {.tv_sec = CLIENT_IO_TIMEOUT_S};
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
   struct ctrl_msg hdr;
   struct screen_info payload;
