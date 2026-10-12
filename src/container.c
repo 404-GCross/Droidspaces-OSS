@@ -11,7 +11,7 @@
 /* Container lifecycle lock
  *
  * Everything a container owns on disk is keyed by its name: pidfile, mount
- * point, cgroup, sidecars. So at most one actor may change a container's state
+ * point, cgroup. So at most one actor may change a container's state
  * at a time, and that includes the monitor, not only commands. Whoever holds
  * <pids>/<name>.lock owns the transition, and decides what to do from the
  * state it finds while holding it.
@@ -27,27 +27,32 @@
 #define DS_EXT_HELPERS ".helpers"
 
 /* Four is enough: a monitor holds at most supervision, helpers and, while it
- * acts on its container's exit, the lifecycle lock. */
-static int g_held_locks[4] = {-1, -1, -1, -1};
+ * acts on its container's exit, the lifecycle lock. The path is kept so that
+ * release can unlink the file. */
+static struct held_lock {
+  int fd;
+  char path[PATH_MAX];
+} g_held_locks[4] = {{-1, ""}, {-1, ""}, {-1, ""}, {-1, ""}};
+
+#define N_HELD_LOCKS (sizeof(g_held_locks) / sizeof(g_held_locks[0]))
+
+static struct held_lock *find_held(int fd) {
+  for (size_t i = 0; i < N_HELD_LOCKS; i++)
+    if (g_held_locks[i].fd == fd)
+      return &g_held_locks[i];
+  return NULL;
+}
 
 /* A lock belongs to the process that took it. flock() locks live on the open
  * file description, which fork() shares with the child, so without this any
  * long-lived child (the monitor, a log relay) would keep its parent's lock
- * held long after the parent let go. */
+ * held long after the parent let go. Close only: the parent still holds them.
+ */
 static void drop_inherited_locks(void) {
-  for (size_t i = 0; i < sizeof(g_held_locks) / sizeof(g_held_locks[0]); i++) {
-    if (g_held_locks[i] >= 0)
-      close(g_held_locks[i]);
-    g_held_locks[i] = -1;
-  }
-}
-
-static void track_lock(int fd, int held) {
-  for (size_t i = 0; i < sizeof(g_held_locks) / sizeof(g_held_locks[0]); i++) {
-    if (g_held_locks[i] == (held ? -1 : fd)) {
-      g_held_locks[i] = held ? fd : -1;
-      return;
-    }
+  for (size_t i = 0; i < N_HELD_LOCKS; i++) {
+    if (g_held_locks[i].fd >= 0)
+      close(g_held_locks[i].fd);
+    g_held_locks[i].fd = -1;
   }
 }
 
@@ -68,10 +73,12 @@ static int get_lock_path(const char *name, const char *ext, char *buf,
 /* open + flock. Returns the fd, or -1 with errno set (EWOULDBLOCK when op has
  * LOCK_NB and somebody else holds it).
  *
- * We never unlink a lock file, but a monitor from a build before this lock
- * does: it deletes a lock file it considers stale. A lock on an unlinked file
+ * unlock_file() removes a lock file whose last holder lets go, so the file we
+ * locked may no longer be the one the path names. A lock on an unlinked file
  * guards nothing, so after locking check the path still names our file, and
- * start over if it does not. */
+ * start over if it does not. Bounded: on a filesystem where fstat and stat
+ * disagree (overlayfs before 4.19) every attempt fails, and the callers all
+ * tolerate -1. */
 static int lock_file(const char *path, int op) {
   static int atfork_registered;
   if (!atfork_registered) {
@@ -98,7 +105,11 @@ static int lock_file(const char *path, int op) {
     struct stat held, named;
     if (fstat(fd, &held) == 0 && stat(path, &named) == 0 &&
         held.st_ino == named.st_ino && held.st_dev == named.st_dev) {
-      track_lock(fd, 1);
+      struct held_lock *slot = find_held(-1);
+      if (slot) {
+        slot->fd = fd;
+        safe_strncpy(slot->path, path, sizeof(slot->path));
+      }
       return fd;
     }
     close(fd);
@@ -107,8 +118,19 @@ static int lock_file(const char *path, int op) {
   return -1;
 }
 
+/* Release, and remove the file when we are its last holder: an exclusive lock
+ * means nobody else has one. Unlinking while still holding the lock is what
+ * makes this safe, see lock_file(). The same pattern as systemd's
+ * release_lock_file(). Converting a shared lock drops it first and, on
+ * EWOULDBLOCK, does not put it back, which is fine only because we are
+ * releasing anyway: never call this on a shared lock you still need. */
 static void unlock_file(int fd) {
-  track_lock(fd, 0);
+  struct held_lock *slot = find_held(fd);
+  if (slot) {
+    if (flock(fd, LOCK_EX | LOCK_NB) == 0)
+      unlink(slot->path);
+    slot->fd = -1;
+  }
   flock(fd, LOCK_UN);
   close(fd);
 }
@@ -151,10 +173,46 @@ void ds_container_unlock(int fd) {
 }
 
 /* Called once by a monitor, which then holds it until it exits. */
+static int g_supervision_fd = -1;
+
 void ds_container_claim_supervision(const char *name) {
   char path[PATH_MAX];
   if (get_lock_path(name, DS_EXT_MONITOR, path, sizeof(path)) == 0)
-    lock_file(path, LOCK_SH);
+    g_supervision_fd = lock_file(path, LOCK_SH);
+}
+
+/* The monitor's last act. Its pidfile is gone by now, so no pruner can be
+ * looking for it, and a successor monitor (restart) holds its own shared lock
+ * on the same file, in which case the file stays. */
+void ds_container_release_supervision(void) {
+  if (g_supervision_fd >= 0)
+    unlock_file(g_supervision_fd);
+  g_supervision_fd = -1;
+}
+
+/* Take and release a lock that only a monitor ever holds. Returns 0 when it
+ * was free, and then the file is gone too (see unlock_file), or -1 when a
+ * live monitor has it. */
+static int probe_free(const char *name, const char *ext) {
+  char path[PATH_MAX];
+  if (get_lock_path(name, ext, path, sizeof(path)) < 0)
+    return -1;
+  /* No file, no holder. Also keeps a 20 ms wait loop and a scan over stray
+   * directory names from minting and deleting lock files. */
+  if (access(path, F_OK) != 0)
+    return 0;
+  int fd = lock_file(path, LOCK_EX | LOCK_NB);
+  if (fd < 0)
+    return -1;
+  unlock_file(fd);
+  return 0;
+}
+
+/* For a stop, which holds the lifecycle lock: a monitor killed with -9 never
+ * released its supervision file, and nothing else takes it. A live monitor
+ * holds it shared, so this is a no-op while one exists. */
+void ds_container_prune_supervision(const char *name) {
+  probe_free(name, DS_EXT_MONITOR);
 }
 
 /* Held by the monitor for exactly the life of its route monitor thread. That
@@ -175,15 +233,9 @@ int ds_container_lock_helpers(const char *name) {
  * timeout carry on anyway: that is no worse than before the lock existed, and
  * the holder is then a monitor that is wedged, not one winding down. */
 void ds_container_wait_helpers(const char *name, int timeout_ms) {
-  char path[PATH_MAX];
-  if (get_lock_path(name, DS_EXT_HELPERS, path, sizeof(path)) < 0)
-    return;
   for (int waited = 0;; waited += 20) {
-    int fd = lock_file(path, LOCK_EX | LOCK_NB);
-    if (fd >= 0) {
-      unlock_file(fd);
+    if (probe_free(name, DS_EXT_HELPERS) == 0)
       return;
-    }
     if (waited >= timeout_ms) {
       ds_warn("Could not confirm that the monitor for '%s' stopped its "
               "network helpers - proceeding with cleanup",
@@ -201,20 +253,18 @@ void ds_container_wait_helpers(const char *name, int timeout_ms) {
  * ds_container_unlock(), or -1, in which case leave the container alone.
  * Anything we cannot determine counts as "not ours to touch". */
 int ds_container_lock_orphan(const char *name) {
-  char path[PATH_MAX];
-  if (get_lock_path(name, DS_EXT_MONITOR, path, sizeof(path)) < 0)
-    return -1;
-
   int fd = ds_container_lock(name, 0);
   if (fd < 0)
     return -1;
 
-  int probe = lock_file(path, LOCK_EX | LOCK_NB);
-  if (probe < 0) {
+  if (probe_free(name, DS_EXT_MONITOR) < 0) {
     ds_container_unlock(fd);
     return -1;
   }
-  unlock_file(probe);
+  /* No monitor, so nobody holds the helpers lock either: a monitor killed
+   * with -9 while its route monitor ran leaves the file, and only a stop
+   * would otherwise ever look at it. */
+  probe_free(name, DS_EXT_HELPERS);
   return fd;
 }
 
@@ -368,14 +418,7 @@ void cleanup_container_resources(struct ds_config *cfg, pid_t pid,
   }
 
   /* 4. Handle rootfs image unmount */
-  char mount_point[PATH_MAX] = "";
-  if (read_mount_path(cfg->pidfile, mount_point, sizeof(mount_point)) <= 0) {
-    /* Fallback: use cfg->img_mount_point if .mount sidecar is gone */
-    if (cfg->img_mount_point[0]) {
-      safe_strncpy(mount_point, cfg->img_mount_point, sizeof(mount_point));
-    }
-  }
-
+  const char *mount_point = cfg->img_mount_point;
   if (mount_point[0] && !skip_unmount) {
     if (force_cleanup) {
       /* Force path: detach+force unmount, no sync, no retry loops */
@@ -387,12 +430,9 @@ void cleanup_container_resources(struct ds_config *cfg, pid_t pid,
     }
   }
 
-  /* 5. Remove tracking info and unlink PID files.
-   * For restart (skip_unmount), preserve the .mount sidecar and pidfiles
-   * so start_rootfs() can detect the existing mount and reuse it. */
+  /* 5. Unlink PID files. A restart (skip_unmount) keeps them: the monitor
+   * reads the dead PID in them as "nobody has claimed this exit yet". */
   if (!skip_unmount) {
-    remove_mount_path(cfg->pidfile);
-    remove_init_type(cfg->pidfile);
     if (cfg->pidfile[0])
       unlink(cfg->pidfile);
     if (global_pidfile[0] && strcmp(cfg->pidfile, global_pidfile) != 0)
@@ -486,14 +526,12 @@ static int start_rootfs_locked(struct ds_config *cfg, int *lock_fd,
   /* 0. Restart: pick the preserved mount back up. If it is gone after all,
    *    this is an ordinary start that mounts the image again. */
   if (reuse_mount) {
-    if (cfg->pidfile[0] == '\0')
-      resolve_pidfile_from_name(cfg->container_name, cfg->pidfile,
-                                sizeof(cfg->pidfile));
-
+    /* Only an image container may adopt a mount under its name: a directory
+     * one that inherits a leftover image mount would boot the wrong rootfs. */
     char existing_mount[PATH_MAX];
-    if (cfg->pidfile[0] &&
-        read_mount_path(cfg->pidfile, existing_mount, sizeof(existing_mount)) >
-            0 &&
+    if (cfg->rootfs_img_path[0] &&
+        ds_img_mount_point(cfg->container_name, existing_mount,
+                           sizeof(existing_mount)) == 0 &&
         is_mountpoint(existing_mount)) {
       safe_strncpy(cfg->rootfs_path, existing_mount, sizeof(cfg->rootfs_path));
       cfg->is_img_mount = 1;
@@ -856,12 +894,6 @@ static int start_rootfs_locked(struct ds_config *cfg, int *lock_fd,
     }
   }
 
-  if (cfg->is_img_mount)
-    save_mount_path(cfg->pidfile, cfg->img_mount_point);
-
-  /* Also save init type */
-  save_init_type(cfg->pidfile, cfg->init_type);
-
   /* 11. Do not show the info or return until init has exec'd. A command that
    * returned earlier left init still logging to a terminal nobody was reading
    * any more, and its last lines, "Booting ..." among them, went missing. */
@@ -1022,31 +1054,32 @@ static int stop_rootfs_locked(struct ds_config *caller_cfg, int skip_unmount,
 
   ds_log("Stopping container '%s' (PID %d)...", cfg->container_name, pid);
 
-  /* Safe Metadata Capture: Read the mount path from the tracking file (.mount)
-   * into memory before we start the shutdown wait loop. This ensures we have
-   * the correct host path even if the tracking files are deleted by the monitor
-   * or another process during the timeout. */
-  if (cfg->img_mount_point[0] == '\0') {
-    read_mount_path(cfg->pidfile, cfg->img_mount_point,
-                    sizeof(cfg->img_mount_point));
+  /* The snapshot names the image file, not where it is mounted. The mount
+   * point is a function of the name, so look there. A directory container
+   * does not claim a leftover image mount under its name: the firmware path
+   * and unmount below would then act on a mount it never owned. An image
+   * deleted under a running container reloads as a directory and leaves its
+   * mount for the next scan or start to clear. */
+  if (cfg->img_mount_point[0] == '\0' && cfg->rootfs_img_path[0]) {
+    char expected[PATH_MAX];
+    if (ds_img_mount_point(cfg->container_name, expected, sizeof(expected)) ==
+            0 &&
+        is_mountpoint(expected))
+      safe_strncpy(cfg->img_mount_point, expected,
+                   sizeof(cfg->img_mount_point));
   }
 
   /* 1. Send shutdown signal. */
   if (cfg->custom_init[0]) {
     kill(pid, SIGKILL);
   } else {
-    /* Detect init system and send the correct shutdown signal. */
+    /* Detect the init system through the live container's root rather than a
+     * host path: that is right for a volatile overlay, a --pidfile-only
+     * invocation and a container from before config snapshots alike. */
     ds_init_type_t init_type = DS_INIT_UNKNOWN;
-    const char *probe_root =
-        cfg->img_mount_point[0] ? cfg->img_mount_point : cfg->rootfs_path;
-    if (__builtin_expect((read_init_type(cfg->pidfile, &init_type) != 0 ||
-                          init_type == DS_INIT_UNKNOWN),
-                         0)) {
-      /* Fallback for containers launched before .init sidecars existed,
-       * or if runtime metadata was lost / non-informative. */
-      if (__builtin_expect(probe_root[0], '/'))
-        init_type = detect_container_init(probe_root);
-    }
+    char probe_root[PATH_MAX];
+    if (build_proc_root_path(pid, "", probe_root, sizeof(probe_root)) == 0)
+      init_type = detect_container_init(probe_root);
 
     switch (init_type) {
     case DS_INIT_PROCD:
@@ -1177,6 +1210,7 @@ static int stop_rootfs_locked(struct ds_config *caller_cfg, int skip_unmount,
 
   /* 5. Complete resource cleanup. */
   cleanup_container_resources(cfg, pid, skip_unmount, unkillable);
+  ds_container_prune_supervision(cfg->container_name);
   ds_socketd_record_core_event("die", cfg->container_name, cfg->uuid);
 
   if (!cfg->foreground)
@@ -2163,8 +2197,8 @@ static int restart_rootfs_locked(struct ds_config *cfg, int *lock_fd,
    * (--reset included) so every flag behaves exactly as it would on a fresh
    * start. An explicit --conf never read the booted snapshot in the first
    * place: cfg already holds that file plus the overrides, so skip the
-   * reload entirely. start_rootfs re-derives the preserved mount from the
-   * on-disk .mount sidecar, so losing the snapshot paths is fine. */
+   * reload entirely. start_rootfs finds the preserved mount by name, so losing
+   * the snapshot paths is fine. */
   if (!cfg->config_file_specified) {
     /* Clean slate first: the load only overlays keys present in the file, so
      * without the reset every conditionally-written key would keep its value

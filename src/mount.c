@@ -45,20 +45,30 @@ static int force_unlink(const char *path) {
   return 0;
 }
 
+/* Where a container's image is mounted, if it is mounted at all. The path is a
+ * function of the name alone, so nothing has to record it: a stop, a restart or
+ * a scan asks is_mountpoint() on it. */
+int ds_img_mount_point(const char *name, char *buf, size_t size) {
+  /* An empty or dotted name would resolve to the mount root itself, which
+   * cleanup then force-detaches. */
+  if (!validate_container_name(name))
+    return -1;
+  char safe_name[256];
+  sanitize_container_name(name, safe_name, sizeof(safe_name));
+  int r = snprintf(buf, size, "%s/%s", DS_IMG_MOUNT_ROOT_UNIVERSAL, safe_name);
+  return (r > 0 && (size_t)r < size) ? 0 : -1;
+}
+
 /* Find available mount point in /mnt/Droidspaces/ using container name.
  * If a mount point already exists for this name but is not associated
  * with an active container (stale), it will be cleaned up. */
 static int find_available_mountpoint(const char *name, char *mount_path,
                                      size_t size) {
-  const char *base_dir = DS_IMG_MOUNT_ROOT_UNIVERSAL;
-
   /* Create base directory if it doesn't exist */
-  mkdir(base_dir, 0755);
+  mkdir(DS_IMG_MOUNT_ROOT_UNIVERSAL, 0755);
 
-  char safe_name[256];
-  sanitize_container_name(name, safe_name, sizeof(safe_name));
-
-  snprintf(mount_path, size, "%s/%s", base_dir, safe_name);
+  if (ds_img_mount_point(name, mount_path, size) < 0)
+    return -1;
 
   if (access(mount_path, F_OK) == 0) {
     if (is_mountpoint(mount_path)) {

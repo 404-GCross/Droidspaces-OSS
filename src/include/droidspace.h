@@ -126,7 +126,6 @@
 /* Hardening constants */
 #define DS_DEFAULT_TTY_GID 5
 #define DS_DEFAULT_SUBNET "172.28.0.0/16"
-#define DS_MAX_TRACKED_ENTRIES 512
 
 /* X11 Display Number - change this one value to relocate everything */
 #define TX11_DISPLAY_NUM 5
@@ -165,9 +164,7 @@
 #define DS_EXT_PID ".pid"
 #define DS_EXT_XPID ".xpid"
 #define DS_EXT_VPID ".vpid"
-#define DS_EXT_MOUNT ".mount"
 #define DS_EXT_LOCK ".lock"
-#define DS_EXT_INIT ".init"
 
 /* Signals */
 #define DS_SIG_STOP (SIGRTMIN + 3)
@@ -527,12 +524,6 @@ int parse_os_release(const char *rootfs_path, char *id_out, char *ver_out,
                      size_t out_size);
 int grep_file(const char *path, const char *pattern);
 int read_and_validate_pid(const char *pidfile, pid_t *pid_out);
-int save_mount_path(const char *pidfile, const char *mount_path);
-int read_mount_path(const char *pidfile, char *buf, size_t size);
-int remove_mount_path(const char *pidfile);
-int save_init_type(const char *pidfile, ds_init_type_t init_type);
-int read_init_type(const char *pidfile, ds_init_type_t *init_type_out);
-int remove_init_type(const char *pidfile);
 void firmware_path_add(const char *fw_path);
 void firmware_path_remove(const char *fw_path);
 int run_command(char *const argv[]);
@@ -558,6 +549,8 @@ int ds_container_lock(const char *name, int wait);
 void ds_container_unlock(int fd);
 int ds_container_lock_orphan(const char *name);
 void ds_container_claim_supervision(const char *name);
+void ds_container_release_supervision(void);
+void ds_container_prune_supervision(const char *name);
 int ds_container_lock_helpers(const char *name);
 void ds_container_wait_helpers(const char *name, int timeout_ms);
 void ds_android_helpers_sync(struct ds_config *cfg);
@@ -691,6 +684,7 @@ int mount_rootfs_img(const char *img_path, char *mount_point, size_t mp_size,
                      const char *name);
 int unmount_rootfs_img(const char *mount_point, int silent);
 int is_mountpoint(const char *path);
+int ds_img_mount_point(const char *name, char *buf, size_t size);
 
 /* cgroup.c */
 

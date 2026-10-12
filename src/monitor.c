@@ -709,6 +709,7 @@ reboot_loop:;
 
 monitor_cleanup_and_exit:
   ds_container_unlock(lifecycle_fd);
+  ds_container_release_supervision();
   /* Capture any final console output, then close the background console log. */
   if (!cfg->foreground && cfg->console.master >= 0)
     ds_console_drain(cfg->console.master, console_log_fd, &console_logged);

@@ -520,9 +520,6 @@ int internal_boot(struct ds_config *cfg) {
 
   write_file("run/droidspaces/name", cfg->container_name);
 
-  if (cfg->img_mount_point[0])
-    write_file("run/droidspaces/mount", cfg->img_mount_point);
-
   /* Legacy compatibility: write version to the marker directory root */
   write_file("run/droidspaces/version", DS_VERSION);
   if (cfg->foreground) {
