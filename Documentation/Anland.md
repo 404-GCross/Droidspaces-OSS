@@ -57,7 +57,7 @@ For a distribution or desktop of your choice, or when you want to see what the b
 
 ## Step 2: Install the Anland app
 
-Install the APK from the [latest Anland release](https://github.com/superturtlee/anland/releases/latest), open it once, and grant it root.
+Install `anland-v5.apk` from the newest 5.x release on the [Anland releases page](https://github.com/superturtlee/anland/releases), open it once, and grant it root. Droidspaces supports only Anland 5.x. The 6.x releases, marked "Latest" there, are a different app and do not work with it.
 
 ## Step 3: Configure the container
 
