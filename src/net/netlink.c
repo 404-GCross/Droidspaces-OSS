@@ -1225,9 +1225,16 @@ int ds_nl_get_android_default(ds_nl_ctx_t *ctx, int family, char *ifname_out,
         case FRA_IIFNAME:
           safe_strncpy(iifname, RTA_DATA(rta), IFNAMSIZ);
           break;
-        case FRA_UID_RANGE:
-          have_uidrange = 1;
+        case FRA_UID_RANGE: {
+          /* {start, end} as two u32. Android 15+ netd writes the default
+           * network as a range over every uid, 0-2147483647, instead of a
+           * bare rule; only a narrower range is a per-app preference. */
+          const uint32_t *ur = RTA_DATA(rta);
+          if (RTA_PAYLOAD(rta) < 2 * sizeof(*ur) || ur[0] != 0 ||
+              ur[1] < 0x7fffffffu)
+            have_uidrange = 1;
           break;
+        }
         }
       }
 
@@ -1244,10 +1251,10 @@ int ds_nl_get_android_default(ds_nl_ctx_t *ctx, int family, char *ifname_out,
         continue;
       if (strcmp(iifname, "lo") != 0)
         continue;
-      /* Skip uid-scoped rules (Android 12+ per-app / work-profile network
-       * preference).  They share the default-network signature at higher
-       * precedence but only apply to specific uids - we want the global
-       * default network, which is the rule without a uid range. */
+      /* Skip per-app and work-profile rules (Android 12+ network
+       * preference). They share the default-network signature at higher
+       * precedence but only apply to some uids. A range over every uid is
+       * the global default network itself, see above. */
       if (have_uidrange)
         continue;
       if (r_table <= 0)
