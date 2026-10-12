@@ -34,13 +34,6 @@
 
 #include <sys/stat.h>
 
-/* Host directory for the per-container display sockets: /data/local/tmp, which
- * always exists and is the same directory the consumer app already uses for its
- * default socket, so the consumer can reach it without the permission problems
- * of a workspace-private path. The socket files are named anland-<uuid>.sock
- * directly in this dir (no subdirectory to create). */
-#define ANLAND_SOCK_DIR "/data/local/tmp"
-
 /* Per-container Pids-dir filenames (keyed by container name). */
 static void anland_pid_file(const struct ds_config *cfg, char *buf, size_t n) {
   snprintf(buf, n, "%s.anland.pid", cfg->container_name);
@@ -166,14 +159,18 @@ int ds_anland_daemon_start(struct ds_config *cfg) {
     return 1;
   }
 
-  /* Generated per-container socket path, directly in /data/local/tmp. */
+  /* The socket lives in the workspace's Net directory, which only root can
+   * write. /data/local/tmp belongs to the shell user with no sticky bit, so a
+   * socket there could be swapped for a symlink before the chmod and the bind
+   * mount below, both of which follow symlinks as root. The directory is 0755,
+   * so the consumer can still reach the socket. */
   char uuid[DS_UUID_LEN + 1];
   if (generate_uuid(uuid, sizeof(uuid)) < 0) {
     ds_error("[Anland] failed to generate socket name");
     return -1;
   }
-  snprintf(cfg->anland_sock, sizeof(cfg->anland_sock),
-           ANLAND_SOCK_DIR "/anland-%s.sock", uuid);
+  snprintf(cfg->anland_sock, sizeof(cfg->anland_sock), "%s/anland-%s.sock",
+           get_net_dir(), uuid);
 
   ds_log("[Anland] launching display daemon on %s", cfg->anland_sock);
 
