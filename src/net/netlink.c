@@ -568,12 +568,14 @@ int ds_nl_link_down(ds_nl_ctx_t *ctx, const char *ifname) {
   return ds_nl_link_set_up(ctx, ifname, 0);
 }
 
-/* Delete a link by name (idempotent - ENODEV/ENOENT treated as success) */
+/* Delete a link by name. Returns 1 when this call removed it, 0 when it was
+ * already gone (so callers can log only what they actually did), negative on
+ * any other error. */
 
 int ds_nl_del_link(ds_nl_ctx_t *ctx, const char *ifname) {
   int idx = ds_nl_get_ifindex(ctx, ifname);
   if (idx <= 0)
-    return 0; /* already gone */
+    return 0;
 
   struct {
     struct nlmsghdr n;
@@ -587,7 +589,9 @@ int ds_nl_del_link(ds_nl_ctx_t *ctx, const char *ifname) {
   req.i.ifi_index = idx;
 
   int ret = ds_nl_talk(ctx, &req.n);
-  return (ret == 0 || ret == -ENODEV || ret == -ENOENT) ? 0 : ret;
+  if (ret == 0)
+    return 1;
+  return (ret == -ENODEV || ret == -ENOENT) ? 0 : ret;
 }
 
 /* Rename an interface

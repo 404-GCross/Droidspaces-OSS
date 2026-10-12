@@ -1036,10 +1036,10 @@ int setup_veth_host_side(struct ds_config *cfg, pid_t child_pid) {
     return -1;
   }
 
-  /* Clean up stale interfaces from previous runs */
-  ds_log("[DEBUG] Cleaning up any stale interfaces: %s, %s", veth_host,
-         veth_peer);
-  ds_nl_del_link(ctx, veth_host);
+  /* A leftover with our name only exists if the kernel recycled the PID of
+   * an instance whose netns is still draining. */
+  if (ds_nl_del_link(ctx, veth_host) > 0)
+    ds_log("[NET] Removed stale %s", veth_host);
 
   /* The previous boot cycle's veth. The kernel only removes it once the old
    * network namespace is freed, and a guest that was killed with TCP
@@ -1739,9 +1739,9 @@ void ds_net_gateway_teardown(const char *gateway_name) {
      * client start/wire or the gateway's own rewire on the segment. */
     int lock = gateway_segment_lock(bridge);
 
-    ds_nl_del_link(ctx, gw_host);
-    ds_log("[NET] Gateway teardown: removed gateway veth %s (segment %s)",
-           gw_host, bridge);
+    if (ds_nl_del_link(ctx, gw_host) > 0)
+      ds_log("[NET] Gateway teardown: removed gateway veth %s (segment %s)",
+             gw_host, bridge);
 
     int clients = ds_nl_count_bridge_members_with_prefix(
         ctx, bridge, app_veth_host_prefix(&c));
@@ -1750,9 +1750,9 @@ void ds_net_gateway_teardown(const char *gateway_name) {
              "bridge",
              clients, bridge);
     } else {
-      ds_nl_del_link(ctx, bridge);
-      ds_log("[NET] Gateway teardown: reaped idle delegated LAN bridge %s",
-             bridge);
+      if (ds_nl_del_link(ctx, bridge) > 0)
+        ds_log("[NET] Gateway teardown: reaped idle delegated LAN bridge %s",
+               bridge);
     }
 
     gateway_segment_unlock(lock);
@@ -2766,8 +2766,8 @@ void ds_net_cleanup(struct ds_config *cfg, pid_t container_pid) {
        * attaching its veth) cannot slip in between our count and our reap. */
       int lock = gateway_segment_lock(bridge);
 
-      ds_nl_del_link(ctx, veth_host);
-      ds_log("[NET] Gateway cleanup: removed %s", veth_host);
+      if (ds_nl_del_link(ctx, veth_host) > 0)
+        ds_log("[NET] Gateway cleanup: removed %s", veth_host);
 
       int clients = ds_nl_count_bridge_members_with_prefix(
           ctx, bridge, app_veth_host_prefix(cfg));
@@ -2789,9 +2789,9 @@ void ds_net_cleanup(struct ds_config *cfg, pid_t container_pid) {
          * ran ds_net_gateway_teardown(), which explicitly deleted the gateway
          * veth (the kernel does not auto-reap it), so the bridge is now idle
          * and safe to reap. */
-        ds_nl_del_link(ctx, bridge);
-        ds_log("[NET] Gateway cleanup: reaped idle delegated LAN bridge %s",
-               bridge);
+        if (ds_nl_del_link(ctx, bridge) > 0)
+          ds_log("[NET] Gateway cleanup: reaped idle delegated LAN bridge %s",
+                 bridge);
       }
 
       gateway_segment_unlock(lock);
