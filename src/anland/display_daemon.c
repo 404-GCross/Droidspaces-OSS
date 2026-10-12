@@ -4,6 +4,10 @@
  * Vendored from https://github.com/superturtlee/anland, branch legacy,
  * libdisplay_daemon/display_daemon.c, and adapted for Droidspaces:
  *
+ *   - the two roles are authenticated. The consumer must be root: the Anland
+ *     app connects through its su helper, which hands the fd over and exits,
+ *     so only the uid can be checked, never the pid. The producer must come
+ *     from inside a container. Anyone else is dropped.
  *   - every fd a message carries is either deposited or closed, and the fd
  *     set is accepted and delivered at the same count.
  *   - a client dropped during an epoll batch is freed after the batch, so a
@@ -64,6 +68,38 @@ static void close_fds(int *fds, int count) {
 static void clear_deposit(daemon_ctx *ctx) {
   close_fds(ctx->fds, ctx->fd_count);
   ctx->fd_count = 0;
+}
+
+static int peer_cred(int fd, struct ucred *cred) {
+  socklen_t clen = sizeof(*cred);
+  return getsockopt(fd, SOL_SOCKET, SO_PEERCRED, cred, &clen) == 0 &&
+         clen == sizeof(*cred);
+}
+
+/* The credentials are captured at connect time, so they outlive the su
+ * helper. A pid namespace check is impossible here for the same reason: the
+ * helper is gone before the hello arrives. Container root can pass this gate,
+ * but it already owns the desktop behind the socket. */
+static int peer_is_root(int fd) {
+  struct ucred cred;
+  return peer_cred(fd, &cred) && cred.uid == 0;
+}
+
+/* Only a positive answer counts: the peer's pid must resolve and its PID
+ * namespace must differ from ours. Anything unreadable is not a container. */
+static int peer_in_container(int fd) {
+  struct ucred cred;
+  if (!peer_cred(fd, &cred) || cred.pid <= 0)
+    return 0;
+  char path[64], self_ns[64], peer_ns[64];
+  ssize_t sn = readlink("/proc/self/ns/pid", self_ns, sizeof(self_ns) - 1);
+  snprintf(path, sizeof(path), "/proc/%d/ns/pid", (int)cred.pid);
+  ssize_t pn = readlink(path, peer_ns, sizeof(peer_ns) - 1);
+  if (sn <= 0 || pn <= 0)
+    return 0;
+  self_ns[sn] = '\0';
+  peer_ns[pn] = '\0';
+  return strcmp(self_ns, peer_ns) != 0;
 }
 
 static int recv_all(int fd, void *buf, size_t len) {
@@ -233,12 +269,15 @@ static void handle_new_connection(daemon_ctx *ctx) {
     return;
   }
 
-  int is_hello = hdr.type == CTRL_MSG_CONSUMER_HELLO ||
-                 hdr.type == CTRL_MSG_PRODUCER_HELLO;
-  struct client *c = is_hello ? calloc(1, sizeof(*c)) : NULL;
+  int allowed = 0;
+  if (hdr.type == CTRL_MSG_CONSUMER_HELLO)
+    allowed = peer_is_root(fd);
+  else if (hdr.type == CTRL_MSG_PRODUCER_HELLO)
+    allowed = peer_in_container(fd);
+  struct client *c = allowed ? calloc(1, sizeof(*c)) : NULL;
   if (!c) {
-    if (!is_hello)
-      dlog("first message type %u is not a hello: dropped\n", hdr.type);
+    if (!allowed)
+      dlog("rejected message type %u from an unauthorized peer\n", hdr.type);
     close_fds(fds, nfds);
     close(fd);
     return;
