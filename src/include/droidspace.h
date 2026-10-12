@@ -558,6 +558,7 @@ int ds_container_lock(const char *name, int wait);
 void ds_container_unlock(int fd);
 int ds_container_lock_orphan(const char *name);
 void ds_container_claim_supervision(const char *name);
+void ds_android_helpers_sync(struct ds_config *cfg);
 int wait_for_socket_or_death(pid_t pid, const char *path, int timeout_ms,
                              int interval_us);
 void cleanup_container_resources(struct ds_config *cfg, pid_t pid,

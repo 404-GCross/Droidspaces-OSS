@@ -236,6 +236,41 @@ int wait_for_socket_or_death(pid_t pid, const char *path, int timeout_ms,
   return -1;
 }
 
+/* Start the Android helper servers this config wants and stop the ones it
+ * no longer does. A restart and an in-container reboot keep the helpers
+ * alive for the next boot to reuse, so a toggle turned off between two boots
+ * has to be honoured here, or the server outlives it: a stale Anland record
+ * kept the app's launch button up on a container that no longer had a
+ * display. The global servers stay up while another running container
+ * needs them; the Anland broker is per container and goes. */
+void ds_android_helpers_sync(struct ds_config *cfg) {
+  if (!is_android())
+    return;
+  if (cfg->x11) {
+    if (ds_x11_daemon_start(cfg) == 0)
+      wait_for_socket_or_death(
+          cfg->x11_pid, TX11_SOCK_DIR "/" TX11_DISPLAY_SOCK, 5000, 50000);
+  } else {
+    ds_x11_daemon_stop(cfg);
+  }
+  if (cfg->virgl) {
+    if (ds_virgl_daemon_start(cfg) == 0)
+      wait_for_socket_or_death(cfg->virgl_pid, TX11_VIRGL_SOCKET, 2000, 20000);
+  } else {
+    ds_virgl_daemon_stop(cfg);
+  }
+  if (cfg->pulseaudio)
+    ds_pulse_daemon_start(cfg);
+  else
+    ds_pulse_daemon_stop(cfg);
+  /* The broker's socket path is generated here and recorded in the Pids dir,
+   * never in container.config, so a reboot finds it through the record. */
+  if (cfg->anland)
+    ds_anland_daemon_start(cfg);
+  else
+    ds_anland_daemon_stop(cfg);
+}
+
 void cleanup_container_resources(struct ds_config *cfg, pid_t pid,
                                  int skip_unmount, int force_cleanup) {
   /* Flush filesystem buffers (skip if force cleanup - sync can hang on
@@ -567,30 +602,9 @@ static int start_rootfs_locked(struct ds_config *cfg, int *lock_fd,
     cfg->init_type = detect_container_init(rootfs_norm);
   }
 
-  /* 2b. Android: start Termux-X11, VirGL, and PulseAudio servers before fork
-   * so the sockets exist when bind-mounted later */
-  if (is_android() && cfg->x11) {
-    if (ds_x11_daemon_start(cfg) == 0)
-      wait_for_socket_or_death(
-          cfg->x11_pid, TX11_SOCK_DIR "/" TX11_DISPLAY_SOCK, 5000, 50000);
-  }
-
-  if (is_android() && cfg->virgl) {
-    if (ds_virgl_daemon_start(cfg) == 0)
-      wait_for_socket_or_death(cfg->virgl_pid, TX11_VIRGL_SOCKET, 2000, 20000);
-  }
-
-  if (is_android() && cfg->pulseaudio) {
-    ds_pulse_daemon_start(cfg);
-  }
-
-  /* anland display daemon: generate the per-container host socket and start the
-   * broker before fork so the socket exists when bind-mounted post-pivot. The
-   * generated cfg->anland_sock is recorded in the Pids dir (not
-   * container.config) by ds_anland_daemon_start. */
-  if (is_android() && cfg->anland) {
-    ds_anland_daemon_start(cfg);
-  }
+  /* 2b. Android helper servers, before fork so their sockets exist when
+   * they are bind-mounted post-pivot. */
+  ds_android_helpers_sync(cfg);
 
   /* 3. Early pre-flight for volatile mode (before any host changes) */
   if (check_volatile_mode(cfg) < 0) {

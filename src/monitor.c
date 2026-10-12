@@ -686,23 +686,9 @@ reboot_loop:;
     cfg->reboot_cycle = 1;
     clock_gettime(CLOCK_BOOTTIME, &cfg->start_time);
 
-    /* Mirror restart behavior: ensure X, VirGL, and PulseAudio servers are up
-     * before next boot */
-    if (is_android() && cfg->x11) {
-      if (ds_x11_daemon_start(cfg) == 0)
-        wait_for_socket_or_death(
-            cfg->x11_pid, TX11_SOCK_DIR "/" TX11_DISPLAY_SOCK, 5000, 50000);
-    }
-
-    if (is_android() && cfg->virgl) {
-      if (ds_virgl_daemon_start(cfg) == 0)
-        wait_for_socket_or_death(cfg->virgl_pid, TX11_VIRGL_SOCKET, 2000,
-                                 20000);
-    }
-
-    if (is_android() && cfg->pulseaudio) {
-      ds_pulse_daemon_start(cfg);
-    }
+    /* The reloaded config may have turned a helper on or off since the
+     * last boot. */
+    ds_android_helpers_sync(cfg);
 
     /* Refresh ns_inode: new container has a new PID namespace inode.
      * Without this, ds_virtualize_update's PID-recycling guard rejects
