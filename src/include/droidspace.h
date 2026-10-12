@@ -479,6 +479,7 @@ int ds_parse_iface_csv(const char *val, char ifaces[][IFNAMSIZ], int *count,
                        int max);
 char *ds_resolve_path_arg(const char *path);
 void ds_resolve_argv_paths(int argc, char **argv);
+long ds_clk_tck(void);
 long ds_get_container_uptime(pid_t pid);
 void ds_format_uptime(long uptime_sec, char *buf, size_t size);
 

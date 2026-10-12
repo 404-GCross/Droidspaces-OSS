@@ -222,7 +222,7 @@ static int64_t socketd_container_started_at_epoch(pid_t pid) {
   if (socketd_read_uptime_seconds(&uptime_seconds) < 0)
     return 0;
 
-  long ticks_per_second = sysconf(_SC_CLK_TCK);
+  long ticks_per_second = ds_clk_tck();
   if (ticks_per_second <= 0)
     return 0;
 

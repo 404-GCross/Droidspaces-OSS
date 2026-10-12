@@ -10,6 +10,7 @@
 #include <ftw.h>
 #include <grp.h>
 #include <pwd.h>
+#include <sys/auxv.h>
 #include <sys/random.h>
 #include <sys/socket.h>
 #include <sys/xattr.h>
@@ -1618,13 +1619,21 @@ int copy_file(const char *src, const char *dst) {
   return 0;
 }
 
+/* USER_HZ as the kernel announces it in the auxv. musl hardcodes
+ * sysconf(_SC_CLK_TCK) to 100 and never looks, and a vendor kernel built
+ * with USER_HZ=250 then puts every /proc tick count off by 2.5x. */
+long ds_clk_tck(void) {
+  long hz = (long)getauxval(AT_CLKTCK);
+  return hz > 0 ? hz : 100;
+}
+
 /* Seconds since container init started: field 22 (starttime) of
  * /proc/<pid>/stat subtracted from /proc/uptime. */
 long ds_get_container_uptime(pid_t pid) {
   if (pid <= 0)
     return -1;
 
-  long clk_tck = sysconf(_SC_CLK_TCK);
+  long clk_tck = ds_clk_tck();
   if (clk_tck <= 0)
     clk_tck = 100;
 

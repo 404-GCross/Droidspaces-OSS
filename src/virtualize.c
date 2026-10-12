@@ -295,7 +295,7 @@ static char *gen_stat(struct ds_config *cfg, size_t *out_len) {
   char line[2048];
 
   long long user_us = 0, system_us = 0;
-  long hz = sysconf(_SC_CLK_TCK);
+  long hz = ds_clk_tck();
   int own = cfg->cpu_period > 0 && hz > 0 &&
             ds_cgroup_cpu_times(cfg->container_name, &user_us, &system_us) == 0;
   unsigned long long own_user = 0, own_system = 0, own_idle = 0;
@@ -451,7 +451,7 @@ static double container_start_time_secs(pid_t pid) {
   fclose(f);
   if (r != 1 || starttime == 0)
     return -1.0;
-  long ticks = sysconf(_SC_CLK_TCK);
+  long ticks = ds_clk_tck();
   if (ticks <= 0)
     return -1.0;
   return (double)starttime / (double)ticks;

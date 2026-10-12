@@ -972,7 +972,7 @@ int ds_cgroup_cpu_times(const char *container_name, long long *user_us,
     return -1;
   snprintf(path, sizeof(path), "%s/cpuacct.stat", dir);
   long long u = 0, s = 0;
-  long hz = sysconf(_SC_CLK_TCK);
+  long hz = ds_clk_tck();
   /* "user N\nsystem N", in clock ticks */
   if (read_file(path, buf, sizeof(buf)) <= 0 || hz <= 0 ||
       sscanf(buf, "user %lld system %lld", &u, &s) != 2)
