@@ -109,7 +109,8 @@ fun ControlPanelScreen(
                     ) {
                         entries.forEach { entry ->
                             val container = entry.item
-                            // Socket path comes with the heartbeat; presence gates the pill
+                            // The heartbeat reports the broker's socket only for a container
+                            // booted with Anland, so it gates the pill, not the saved config.
                             val anlandSock = containerUsageMap[container.name]?.anlandSocket
                             // Keyed, so a card's state stays with its container when one leaves.
                             key(entry.key) {
@@ -122,7 +123,7 @@ fun ControlPanelScreen(
                                         onTerminalClick = {
                                             onNavigateToTerminal(container.name)
                                         },
-                                        anlandEnabled = container.enableAnland && anlandSock != null,
+                                        anlandEnabled = anlandSock != null,
                                         onLaunchAnland = {
                                             if (anlandSock != null && !AnlandUtils.launchWindow(context, container.name, anlandSock))
                                                 scope.showError(snackbarHostState, context.getString(R.string.anland_not_installed))

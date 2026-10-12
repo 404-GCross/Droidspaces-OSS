@@ -260,11 +260,10 @@ fun ContainerDetailsScreen(
                 )
             }
 
-            if (container.enableAnland) {
+            osInfo?.anlandSocket?.let { socketPath ->
                 item(key = "anland_${container.name}") {
                     AnlandCard(
-                        socketPath = osInfo?.anlandSocket,
-                        onLaunch = { socketPath ->
+                        onLaunch = {
                             if (!AnlandUtils.launchWindow(context, container.name, socketPath))
                                 scope.showError(snackbarHostState, context.getString(R.string.anland_not_installed))
                         }
@@ -720,14 +719,14 @@ private fun PremiumInitSystemCard(
 
 
 /**
- * Opens the container's Wayland desktop in the Anland app. Listed only for a
- * container with Anland Display on. The button waits for the broker's socket,
- * which the heartbeat reports once the container has started.
+ * Opens the container's Wayland desktop in the Anland app. Listed once the
+ * heartbeat reports the broker's socket, which only a container booted with
+ * Anland Display has. The saved config is not consulted: editing it while
+ * the container runs changes nothing until a restart.
  */
 @Composable
 private fun AnlandCard(
-    socketPath: String?,
-    onLaunch: (String) -> Unit,
+    onLaunch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -782,8 +781,7 @@ private fun AnlandCard(
             }
 
             Button(
-                onClick = { socketPath?.let(onLaunch) },
-                enabled = socketPath != null,
+                onClick = onLaunch,
                 modifier = Modifier.widthIn(min = 140.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
