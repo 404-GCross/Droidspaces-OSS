@@ -57,6 +57,9 @@
 #ifndef TMPFS_MAGIC
 #define TMPFS_MAGIC 0x01021994
 #endif
+#ifndef BINDERFS_SUPER_MAGIC
+#define BINDERFS_SUPER_MAGIC 0x6c6f6f70
+#endif
 
 /* Cgroup Namespace support (Linux 4.6+) */
 #ifndef CLONE_NEWCGROUP

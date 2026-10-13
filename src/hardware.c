@@ -128,6 +128,19 @@ static void mirror_gpu_node(const char *host_path, const char *dev_path,
   char tgt[PATH_MAX];
   snprintf(tgt, sizeof(tgt), "%s/%s", dev_path, rel);
 
+  /* On Android 12+ /dev/binder is a symlink into binderfs, whose device
+   * numbers are not in the kernel's chrdev table: a mknod copy has the right
+   * numbers and still opens with ENXIO.  Bind the host's node instead. */
+  struct statfs sfs;
+  if (statfs(host_path, &sfs) == 0 && sfs.f_type == BINDERFS_SUPER_MAGIC) {
+    char real[PATH_MAX];
+    if (!realpath(host_path, real) || bind_mount(real, tgt) < 0)
+      ds_warn("[GPU] bind %s over %s: %s", host_path, tgt, strerror(errno));
+    else
+      ds_log("[GPU] Bound binderfs node: %s", tgt);
+    return;
+  }
+
   struct stat tgt_st;
   int tgt_exists = lstat(tgt, &tgt_st) == 0;
 
