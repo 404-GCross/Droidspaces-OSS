@@ -64,7 +64,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.platform.LocalDensity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.core.content.res.ResourcesCompat
 import com.droidspaces.app.R
 
@@ -86,7 +85,13 @@ fun ContainerTerminalScreen(
     // Read once at entry like the theme above; re-enter to apply
     val confirmTabClose = remember { PreferencesManager.getInstance(context).terminalConfirmClose }
 
-    val keyboardController = LocalSoftwareKeyboardController.current
+    // The TerminalView raises the IME itself, so Compose's keyboard controller has no
+    // session to hide and leaves it up over the screen we return to. Ask the window.
+    val hideKeyboard = {
+        activity?.window?.let {
+            WindowCompat.getInsetsController(it, it.decorView).hide(WindowInsetsCompat.Type.ime())
+        }
+    }
     var binder by remember { mutableStateOf<TerminalSessionService.SessionBinder?>(null) }
 
     DisposableEffect(Unit) {
@@ -143,6 +148,7 @@ fun ContainerTerminalScreen(
             val wasActiveRemoved = activeTabId in toRemove.map { it.id }
             tabs.removeAll(toRemove)
             if (tabs.isEmpty()) {
+                hideKeyboard()
                 onNavigateBack()
             } else if (wasActiveRemoved) {
                 activeTabId = tabs.last().id
@@ -181,9 +187,7 @@ fun ContainerTerminalScreen(
             // above the IME, takes focus, the IME drops, and it jumps to full size on screen.
             // Put the keyboard away first and open it once the inset has settled at zero.
             if (ime.getBottom(density) > 0) {
-                activity?.window?.let {
-                    WindowCompat.getInsetsController(it, it.decorView).hide(WindowInsetsCompat.Type.ime())
-                }
+                hideKeyboard()
                 withTimeoutOrNull(1000) { snapshotFlow { ime.getBottom(density) }.first { it == 0 } }
             }
             showUserPicker = true
@@ -211,7 +215,7 @@ fun ContainerTerminalScreen(
         // and internal cleanup delays (EOF propagation).
         binder?.terminateSession(tab.id)
 
-        if (tabs.size == 1) keyboardController?.hide()
+        if (tabs.size == 1) hideKeyboard()
         val idx = tabs.indexOf(tab)
         tabs.remove(tab)
         if (tabs.isEmpty()) onNavigateBack()
@@ -219,7 +223,7 @@ fun ContainerTerminalScreen(
     }
 
     val exitScreen = {
-        keyboardController?.hide()
+        hideKeyboard()
         onNavigateBack()
     }
 
