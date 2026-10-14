@@ -1,5 +1,5 @@
 /*
- * Droidspaces v6 - Hardware Access Module
+ * Droidspaces v7 - Hardware Access Module
  *
  * This module manages GPU acceleration and hardware device nodes.
  *

@@ -1,5 +1,5 @@
 /*
- * Droidspaces v6 - private backend bridge for droidspaces-socketd
+ * Droidspaces v7 - private backend bridge for droidspaces-socketd
  *
  * Copyright (C) 2026 ravindu644 <droidcasts@protonmail.com>
  * SPDX-License-Identifier: GPL-3.0-or-later
