@@ -142,7 +142,7 @@ class PreferencesManager private constructor(context: Context) {
         }
 
     var themePalette: String
-        get() = prefs.getString(KEY_THEME_PALETTE, "CATPPUCCIN") ?: "CATPPUCCIN"
+        get() = prefs.getString(KEY_THEME_PALETTE, "BROCCOLI") ?: "BROCCOLI"
         set(value) {
             prefs.edit().putString(KEY_THEME_PALETTE, value).apply()
         }
