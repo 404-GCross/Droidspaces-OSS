@@ -57,6 +57,7 @@ import com.termux.terminal.TerminalSession
 import com.termux.view.TerminalView
 import java.lang.ref.WeakReference
 import java.util.UUID
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -107,7 +108,7 @@ fun ContainerTerminalScreen(
 
     val scope = rememberCoroutineScope()
     var availableUsers by remember { mutableStateOf(listOf("root")) }
-    var fetchingUsers by remember { mutableStateOf(false) }
+    var pickJob by remember { mutableStateOf<Job?>(null) }
     // Read inside snapshotFlow only, so the IME animation does not recompose the screen
     val ime = WindowInsets.ime
     val density = LocalDensity.current
@@ -164,15 +165,17 @@ fun ContainerTerminalScreen(
 
     // Users change from inside the container (adduser in another tab), so ask every time
     // instead of trusting the cache. A picker with root as its only row is skipped.
-    suspend fun pickUserOrOpenRoot() {
-        if (fetchingUsers) return
-        fetchingUsers = true
-        try {
+    // The fetch belongs to the screen, not the effect. A restarted LaunchedEffect cancels
+    // its coroutine, but Shell.exec runs to the end first, so the restart would find the
+    // fetch still busy and skip, and the cancelled one never opened anything.
+    fun pickUserOrOpenRoot() {
+        if (pickJob?.isActive == true) return
+        pickJob = scope.launch {
             val users = ContainerUsersManager.getUsers(containerName, useCache = false)
             availableUsers = listOf("root") + users
             if (users.isEmpty()) {
                 addTab("root")
-                return
+                return@launch
             }
             // The picker is its own window. Opened over the terminal's keyboard it sizes itself
             // above the IME, takes focus, the IME drops, and it jumps to full size on screen.
@@ -184,8 +187,6 @@ fun ContainerTerminalScreen(
                 withTimeoutOrNull(1000) { snapshotFlow { ime.getBottom(density) }.first { it == 0 } }
             }
             showUserPicker = true
-        } finally {
-            fetchingUsers = false
         }
     }
 
@@ -290,7 +291,7 @@ fun ContainerTerminalScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { scope.launch { pickUserOrOpenRoot() } }) {
+                        IconButton(onClick = { pickUserOrOpenRoot() }) {
                             Icon(Icons.Default.Add, contentDescription = "New tab")
                         }
                     },
