@@ -445,7 +445,13 @@ int ds_apply_cli_overrides(int argc, char **argv, struct ds_config *cfg,
       char scratch[4096];
       if (parse_and_validate_names(optarg, scratch, sizeof(scratch)) < 0)
         return -1;
-      safe_strncpy(cfg->container_name, optarg, sizeof(cfg->container_name));
+      /* "-n Ubuntu-24.04" finds the folder of "Ubuntu 24.04". Keep the name=
+       * spelling already loaded, or the next save renames the container. */
+      char want[256], have[256];
+      sanitize_container_name(optarg, want, sizeof(want));
+      sanitize_container_name(cfg->container_name, have, sizeof(have));
+      if (strcmp(want, have) != 0)
+        safe_strncpy(cfg->container_name, optarg, sizeof(cfg->container_name));
       break;
     }
     case 'h':

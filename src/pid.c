@@ -426,25 +426,23 @@ int show_containers(struct ds_config *cfg) {
     memset(st, 0, sizeof(*st));
     safe_strncpy(st->name, tmp_cfg.container_name, sizeof(st->name));
     st->pid = pid;
-    if (cfg->format_output) {
-      /* The booted snapshot carries the display name and hostname the
-       * container actually got, the same source ds_config_load_by_name()
-       * prefers for a running one. The app keys its cards by that display
-       * name, not by the sanitized pidfile name, so report it when known. */
-      char snap[PATH_MAX];
-      if (build_proc_root_path(pid, "/run/droidspaces/container.config", snap,
-                               sizeof(snap)) == 0 &&
-          ds_config_load(snap, &tmp_cfg) == 0) {
-        safe_strncpy(st->name, tmp_cfg.container_name, sizeof(st->name));
-        safe_strncpy(st->hostname, tmp_cfg.hostname, sizeof(st->hostname));
-        ds_anland_load_sock(&tmp_cfg);
-        safe_strncpy(st->anland_sock, tmp_cfg.anland_sock,
-                     sizeof(st->anland_sock));
-      }
-      ds_config_free(&tmp_cfg);
-      if (!st->hostname[0])
-        safe_strncpy(st->hostname, st->name, sizeof(st->hostname));
+    /* The booted snapshot carries the display name and hostname the container
+     * actually got, the same source ds_config_load_by_name() prefers for a
+     * running one. The table needs it too: a name copied from it into -n is
+     * what gets saved on the next start. */
+    char snap[PATH_MAX];
+    if (build_proc_root_path(pid, "/run/droidspaces/container.config", snap,
+                             sizeof(snap)) == 0 &&
+        ds_config_load(snap, &tmp_cfg) == 0) {
+      safe_strncpy(st->name, tmp_cfg.container_name, sizeof(st->name));
+      safe_strncpy(st->hostname, tmp_cfg.hostname, sizeof(st->hostname));
+      ds_anland_load_sock(&tmp_cfg);
+      safe_strncpy(st->anland_sock, tmp_cfg.anland_sock,
+                   sizeof(st->anland_sock));
     }
+    ds_config_free(&tmp_cfg);
+    if (!st->hostname[0])
+      safe_strncpy(st->hostname, st->name, sizeof(st->hostname));
     size_t nlen = strlen(st->name);
     if (nlen > max_name_len)
       max_name_len = nlen;
