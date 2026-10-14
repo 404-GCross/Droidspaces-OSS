@@ -936,6 +936,30 @@ static int open_loop_dev(long devnr, char *path_out, size_t path_size) {
   return -1;
 }
 
+/* Qualcomm kernels with the old PFK inline crypto glue (4.9 on SM-T295) find
+ * a bio's key from its page, and loop direct I/O hands ext4 the loop's own
+ * page cache pages, so ICE skips the key and the loop reads raw ciphertext
+ * (and would write plaintext). Read the head of the image through the loop's
+ * page cache, as a mount would, and compare it with the file. O_DIRECT here
+ * would hide the bug: anonymous pages take PFK's working path. 72 KiB covers
+ * the ext4 superblock and group descriptors and the btrfs superblock. */
+static int loop_dio_reads_back(int loop_fd, const char *img_path) {
+  enum { LEN = 72 * 1024 };
+  int ok = 0, img_fd = open(img_path, O_RDONLY | O_CLOEXEC);
+  unsigned char *a = malloc(LEN), *b = malloc(LEN);
+  if (img_fd >= 0 && a && b && pread(loop_fd, a, LEN, 0) == LEN &&
+      pread(img_fd, b, LEN, 0) == LEN && memcmp(a, b, LEN) == 0) {
+    /* An all-zero head proves nothing, so it fails closed */
+    for (int i = 0; i < LEN && !ok; i++)
+      ok = b[i] != 0;
+  }
+  if (img_fd >= 0)
+    close(img_fd);
+  free(a);
+  free(b);
+  return ok;
+}
+
 /*
  * Attach img_path to a free loop device via ioctls.
  * Sets LO_FLAGS_AUTOCLEAR so the kernel auto-releases the loop after umount.
@@ -994,14 +1018,25 @@ static int loop_attach(const char *img_path, char *loop_path_out,
    * request to the backing filesystem asynchronously. The kernel refuses DIO
    * while the loop's sector size is below the backing disk's (4 KiB on UFS),
    * so raise it to the guest filesystem's block size first. Both ioctls are
-   * best effort: kernels before 4.14 and backing filesystems without O_DIRECT
-   * keep the buffered path. */
+   * best effort, kernels without them keep the buffered path. blksize 0 asks
+   * for that path outright. */
+  if (!blksize)
+    return loop_fd;
   ioctl(loop_fd, LOOP_SET_BLOCK_SIZE, (unsigned long)blksize);
-  if (ioctl(loop_fd, LOOP_SET_DIRECT_IO, 1UL) < 0)
+  if (ioctl(loop_fd, LOOP_SET_DIRECT_IO, 1UL) < 0) {
     ds_log("[DEBUG] Loop direct I/O unavailable for %s: %s", img_path,
            strerror(errno));
+    return loop_fd;
+  }
+  if (loop_dio_reads_back(loop_fd, img_path))
+    return loop_fd;
 
-  return loop_fd;
+  /* A fresh loop, so none of the bad pages stay cached on this one */
+  ds_log("[DEBUG] Loop direct I/O reads %s back wrong, attaching buffered",
+         img_path);
+  ioctl(loop_fd, LOOP_CLR_FD, 0);
+  close(loop_fd);
+  return loop_attach(img_path, loop_path_out, path_size, 0);
 }
 
 /* Detach a loop device explicitly via LOOP_CLR_FD (belt-and-suspenders). */
@@ -1137,6 +1172,7 @@ int mount_rootfs_img(const char *img_path, char *mount_point, size_t mp_size,
     }
 
     int ret = mount(final_src, mount_point, fstype, mnt_flags, mnt_data);
+    int mount_errno = errno;
     if (loop_fd >= 0)
       close(loop_fd); /* AUTOCLEAR handles cleanup if mount failed */
 
@@ -1153,7 +1189,8 @@ int mount_rootfs_img(const char *img_path, char *mount_point, size_t mp_size,
      * auto-clear, but be explicit for kernels < 3.10 edge cases. */
     if (loop_fd >= 0)
       loop_detach(final_src);
-    ds_warn("mount(%s, %s) failed: %s", final_src, fstype, strerror(errno));
+    ds_warn("mount(%s, %s) failed: %s", final_src, fstype,
+            strerror(mount_errno));
 
   retry:
     if (attempt < 2) {
