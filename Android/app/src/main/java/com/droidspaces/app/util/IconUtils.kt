@@ -32,6 +32,7 @@ object IconUtils {
             s.contains("Red", true) || s.contains("RHEL", true) -> R.drawable.ic_redhat
             s.contains("Void", true) -> R.drawable.ic_void
             s.contains("Manjaro", true) -> R.drawable.ic_manjaro
+            s.contains("SteamOS", true) -> R.drawable.ic_steamos
             s.contains("Raspberry", true) || s.contains("Raspbian", true) -> R.drawable.ic_raspberry
             s.contains("BusyBox", true) -> R.drawable.ic_busybox
             s.contains("FreeBSD", true) -> R.drawable.ic_freebsd
