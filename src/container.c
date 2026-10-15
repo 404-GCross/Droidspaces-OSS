@@ -1360,6 +1360,7 @@ int enter_rootfs(struct ds_config *cfg, const char *user) {
     ds_cgroup_attach(cfg->container_name);
     ds_log_silent = 0;
     ds_virtualize_join(pid);
+    android_native_personality();
 
     if (enter_namespace(pid, cfg) < 0)
       _exit(EXIT_FAILURE);
@@ -1569,6 +1570,7 @@ int run_in_rootfs(struct ds_config *cfg, char **argv, const char *as_user) {
     ds_cgroup_attach(cfg->container_name);
     ds_log_silent = 0;
     ds_virtualize_join(pid);
+    android_native_personality();
 
     if (enter_namespace(pid, cfg) < 0)
       _exit(EXIT_FAILURE);
@@ -1678,10 +1680,12 @@ static const char *get_architecture(void) {
     return "x86_64";
   if (strcmp(uts.machine, "aarch64") == 0 || strcmp(uts.machine, "arm64") == 0)
     return "aarch64";
+  /* A 64-bit backend only runs on a 64-bit kernel. A 32-bit name here is the
+   * PER_LINUX32 personality a 32-bit Android hands every process. */
   if (strncmp(uts.machine, "arm", 3) == 0)
-    return "arm";
+    return UINTPTR_MAX > 0xffffffffu ? "aarch64" : "arm";
   if (strcmp(uts.machine, "i686") == 0 || strcmp(uts.machine, "i386") == 0)
-    return "x86";
+    return UINTPTR_MAX > 0xffffffffu ? "x86_64" : "x86";
   return uts.machine;
 }
 

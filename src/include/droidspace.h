@@ -640,6 +640,7 @@ void parse_privileged(const char *value, struct ds_config *cfg);
 /* android.c */
 
 int is_android(void);
+void android_native_personality(void);
 void android_optimizations(int enable);
 void ds_set_selinux_permissive(int enable);
 int ds_get_selinux_status(void);

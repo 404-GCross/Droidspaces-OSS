@@ -122,6 +122,8 @@ int internal_boot(struct ds_config *cfg) {
     return -1;
   }
 
+  android_native_personality();
+
   /* Pre-open the container log file before namespace isolation / pivot_root.
    * The FD survives mount namespace changes, ensuring all post-pivot logs
    * (X11 bridge, bind mounts, init exec) are captured in the host log. */
