@@ -430,6 +430,8 @@ int internal_boot(struct ds_config *cfg) {
   }
 
   /* 16. Custom bind mounts */
+  if (!cfg->reboot_cycle && cfg->bind_count > 0)
+    ds_log("Setting up %d custom bind mount(s)...", cfg->bind_count);
   setup_custom_binds(cfg, ".");
 
   /* 17. pivot_root with MS_MOVE+chroot fallback for ramfs/rootfs environments
@@ -496,13 +498,9 @@ int internal_boot(struct ds_config *cfg) {
   /* 20. Setup GPU groups and X11 socket (AFTER pivot_root) */
   setup_hardware_access(cfg);
 
-  /* Log bind mounts and boot (after hw-access logs for clean ordering) */
-  if (!cfg->reboot_cycle) {
-    if (cfg->bind_count > 0)
-      ds_log("Setting up %d custom bind mount(s)...", cfg->bind_count);
+  if (!cfg->reboot_cycle)
     ds_log("Booting '%s' (init: %s)...", cfg->container_name,
            cfg->custom_init[0] ? cfg->custom_init : DS_DEFAULT_INIT);
-  }
 
   /* 20b. Write identity markers for PID discovery. The command that started us
    * does not watch for these, it waits for the exec at the end. */
