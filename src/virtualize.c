@@ -195,6 +195,17 @@ static char *gen_meminfo(struct ds_config *cfg, size_t *out_len) {
   return buf;
 }
 
+/* /proc/swaps: with a memory limit the container gets no swap, and meminfo
+ * says so, but fastfetch and swapon list the devices from here and would
+ * show the host's zram filling up. A header with no devices is "no swap". */
+static char *gen_swaps(struct ds_config *cfg, size_t *out_len) {
+  (void)cfg;
+  char *buf = strdup("Filename\t\t\t\tType\t\tSize\t\tUsed\t\tPriority\n");
+  if (buf)
+    *out_len = strlen(buf);
+  return buf;
+}
+
 /* /proc/cpuinfo - truncated to container_cpus() entries */
 static char *gen_cpuinfo(struct ds_config *cfg, size_t *out_len) {
   int max_cpus = container_cpus(cfg);
@@ -736,7 +747,7 @@ int ds_virtualize_init(struct ds_config *cfg) {
   } proc_files[] = {
       {"meminfo", gen_meminfo, has_mem}, {"cpuinfo", gen_cpuinfo, has_cpu},
       {"stat", gen_stat, has_cpu},       {"uptime", gen_uptime, 1},
-      {"loadavg", gen_loadavg, 1},
+      {"loadavg", gen_loadavg, 1},       {"swaps", gen_swaps, has_mem},
   };
 
   for (size_t i = 0; i < ARRAY_SIZE(proc_files); i++) {
