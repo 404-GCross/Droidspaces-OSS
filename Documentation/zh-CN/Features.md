@@ -176,11 +176,11 @@ keywords: droidspaces, settings, features, network, mode, hardware, access, gpu,
 
 ## 没有开关的设置项
 
-**init 系统。** 任何能作为 PID 1 运行的 init 都可以：systemd、OpenRC、runit、s6、SysVinit、OpenWrt 的 procd。容器的 `/sbin/init` 必须存在，或者你用自定义 init 二进制指定另一个。App 的容器详情能识别 systemd、OpenRC 和 procd，并让你管理它们的服务。
+**init 系统：** 任何能作为 PID 1 运行的 init 都可以：systemd、OpenRC、runit、s6、SysVinit、OpenWrt 的 procd。容器的 `/sbin/init` 必须存在，或者你用自定义 init 二进制指定另一个。App 的容器详情能识别 systemd、OpenRC 和 procd，并让你管理它们的服务。
 
-**主机名。** `--hostname=NAME`，键 `hostname`。默认为容器名。
+**主机名：** `--hostname=NAME`，键 `hostname`。默认为容器名。
 
-**前台模式。** CLI 上的 `--foreground` 会把你的终端在整个启动过程中附着到容器控制台，这是排查容器起不来的最佳方式。
+**前台模式：** CLI 上的 `--foreground` 会把你的终端在整个启动过程中附着到容器控制台，这是排查容器起不来的最佳方式。
 
 ---
 
