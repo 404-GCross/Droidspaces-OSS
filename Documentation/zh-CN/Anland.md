@@ -1,7 +1,7 @@
 <!--
 title: Anland (Wayland) 使用指南
-section: 指南
-order: 3
+section: Guides
+order: 5
 desc: 在 Droidspaces Android 容器中配置 Anland Wayland 显示，包括后端安装、APK 安装与容器选项。
 keywords: anland, wayland, droidspaces, android, kwin, weston, kde, plasma, gpu, adreno, snapdragon
 -->

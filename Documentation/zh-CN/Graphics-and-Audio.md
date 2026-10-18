@@ -1,7 +1,7 @@
 <!--
 title: 显示、音频与桌面
-section: 指南
-order: 2
+section: Guides
+order: 4
 desc: 在 Android 和 Linux 上为 Droidspaces 容器配置 GPU 加速、PulseAudio 音效与自动启动的桌面环境。
 keywords: gpu, acceleration, droidspaces, termux, x11, virgl, turnip, adreno, pulseaudio, sound, audio, desktop, xfce, container, graphics
 -->

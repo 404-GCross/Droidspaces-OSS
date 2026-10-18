@@ -1,7 +1,7 @@
 <!--
 title: Android 应用指南
 section: Guides
-order: 4
+order: 1
 desc: Droidspaces Android 应用的每个界面：主页、容器和面板标签页，容器菜单，rootfs 仓库，终端，服务管理和设置。
 keywords: droidspaces, android, app, guide, containers, panel, terminal, systemd, services, repository, settings, daemon, mode
 -->

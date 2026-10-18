@@ -1,7 +1,7 @@
 <!--
 title: 内核配置
-section: 指南
-order: 3
+section: Guides
+order: 6
 desc: 如何构建支持 Droidspaces 的 Android 内核：非 GKI 和 GKI 内核所需的配置选项与补丁，以及如何检查结果。
 keywords: kernel, configuration, droidspaces, android, compile, gki, nongki, patches, compatibility, kabi
 -->

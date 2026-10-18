@@ -1,7 +1,7 @@
 <!--
 title: 容器设置
-section: 指南
-order: 1
+section: Guides
+order: 2
 desc: 按 App 显示顺序介绍 Droidspaces 的每一项容器设置：每个开关或参数做什么、什么时候打开，以及它对内核有什么要求。
 keywords: droidspaces, settings, features, network, mode, hardware, access, gpu, volatile, bind, mount, resource, limits, privileged, sandboxing, run, at, boot
 -->

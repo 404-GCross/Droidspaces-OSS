@@ -1,7 +1,7 @@
 <!--
 title: Linux CLI
-section: 指南
-order: 5
+section: Guides
+order: 3
 desc: droidspaces 命令行参考：每条命令、每个参数，以及配置文件中的键。
 keywords: droidspaces, cli, linux, container, command, line, reference, flags, config, file
 -->

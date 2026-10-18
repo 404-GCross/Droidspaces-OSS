@@ -1,7 +1,7 @@
 <!--
 title: 社区支持的 Android 设备
 section: Reference
-order: 3
+order: 2
 desc: 社区维护的已通过验证可运行 Droidspaces 的 Android 设备兼容性列表。
 keywords: droidspaces, supported, devices, android, device, compatibility, kernel, support, list, hardware
 -->

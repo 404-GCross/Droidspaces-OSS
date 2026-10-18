@@ -1,7 +1,7 @@
 <!--
 title: 从零开始的网络基础
-section: 指南
-order: 5
+section: Guides
+order: 7
 desc: 面向初学者的 Droidspaces 网关模式背后每个网络概念指南——IP 地址、LAN、WAN、DHCP、DNS、NAT、网桥、veth 对、网络命名空间与 OpenWRT。
 keywords: droidspaces, networking, gateway, openwrt, nat, dhcp, dns, lan, wan, veth, bridge, namespace, linux, android
 -->
