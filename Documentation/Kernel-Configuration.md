@@ -260,7 +260,7 @@ Build with Bazel, the AOSP build scripts or plain `make`, whichever your tree us
 
 Turn them on only if you can rebuild every kernel module on the device from the same source tree and configuration, and flash them in `vendor_boot`, `vendor_dlkm` and `system_dlkm` together with the new `boot.img`, all at once. If any module is a prebuilt with no source, you cannot. Do not disable `CONFIG_MODVERSIONS` or force-load modules to get past the check; the structures really did change.
 
-Without these two options everything else works. `--cpus` and `--pids-limit` are skipped with a warning and the app greys out the two toggles. Memory limits need only `CONFIG_MEMCG`, which GKI already has.
+Without these two options everything else works. `--cpus` and `--pids-limit` are skipped with a warning and the app greys out the two toggles. Memory limits need only `CONFIG_MEMCG`, which GKI already has. Keeping a limited container out of swap also needs `CONFIG_MEMCG_SWAP`, plus `swapaccount=1` on the kernel command line before 5.8 unless `CONFIG_MEMCG_SWAP_ENABLED` is set; without it the container can still spill into swap past its limit, and the start log says so.
 
 ## What the check looks for
 

@@ -759,6 +759,9 @@ static int apply_limit(struct ds_config *cfg, const char *ctrl,
   if (!file)
     return 1;
 
+  /* Only undo a cgroup this call made: a later knob failing must not take
+   * the earlier limits in the same cgroup down with it. */
+  int made = ver == 1 && access(dir, F_OK) != 0;
   if (ver == 1) {
     mkdir_p(dir, 0755);
     /* Kernels before 5.x account flat by default, and then the limit would
@@ -766,6 +769,11 @@ static int apply_limit(struct ds_config *cfg, const char *ctrl,
      * hierarchical and ignore this. */
     snprintf(path, sizeof(path), "%s/memory.use_hierarchy", dir);
     if (!strcmp(ctrl, "memory") && write_file(path, "1") < 0) {
+    }
+    /* A cgroup left over from an earlier run keeps that run's memsw cap, and
+     * v1 refuses a limit_in_bytes above it, so lift it before any write. */
+    snprintf(path, sizeof(path), "%s/memory.memsw.limit_in_bytes", dir);
+    if (!strcmp(ctrl, "memory") && write_file(path, "-1") < 0) {
     }
   }
 
@@ -785,7 +793,7 @@ static int apply_limit(struct ds_config *cfg, const char *ctrl,
   } else {
     return 1;
   }
-  if (ver == 1)
+  if (made)
     rmdir(dir);
   return 0;
 }
@@ -802,6 +810,19 @@ void ds_cgroup_apply_limits(struct ds_config *cfg) {
                      "CONFIG_MEMCG, and no cgroup_disable=memory on the "
                      "kernel command line"))
       cfg->memory_limit = 0;
+    /* Without this a container at its limit spills into the host's swap,
+     * which on Android is zram, so it keeps eating RAM and kswapd CPU until
+     * the whole phone crawls. Cap it at its own limit and let its OOM killer
+     * act instead. v2's swap.max=0 is absolute. v1 has no swap-only knob:
+     * RAM+swap equal to RAM leaves no room for swap at the limit, though
+     * global reclaim may still move some pages out within it. Per-cgroup
+     * swappiness would stop that, but Android 5.15 accepts the write and
+     * ignores it. The meminfo virtualization already reports no swap. */
+    if (cfg->memory_limit)
+      apply_limit(cfg, "memory", "memory.swap.max", "0",
+                  "memory.memsw.limit_in_bytes", val,
+                  "CONFIG_MEMCG_SWAP with swap accounting on, swapaccount=1 on "
+                  "the kernel command line before 5.8");
   }
   if (cfg->cpu_quota) {
     long long per = cfg->cpu_period > 0 ? cfg->cpu_period : 100000;
