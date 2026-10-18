@@ -1418,6 +1418,9 @@ int enter_rootfs(struct ds_config *cfg, const char *user) {
     if (shell_pid < 0)
       _exit(EXIT_FAILURE);
     if (shell_pid == 0) {
+      /* Only the guest shell loses the protection. The session leader above
+       * holds the tty, and an OOM kill of it would end the session. */
+      ds_oom_unprotect();
       /* Not the session leader on purpose, see above: no setsid, no
        * TIOCSCTTY, the slave is already our controlling terminal. */
       if (ds_terminal_set_stdfds(tty.slave) < 0)
@@ -1592,6 +1595,8 @@ int run_in_rootfs(struct ds_config *cfg, char **argv, const char *as_user) {
     if (cmd_pid < 0)
       _exit(EXIT_FAILURE);
     if (cmd_pid == 0) {
+      /* The waiter above relays the exit status and stays protected */
+      ds_oom_unprotect();
       signal(SIGINT, SIG_DFL);
       signal(SIGQUIT, SIG_DFL);
 

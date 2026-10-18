@@ -123,6 +123,7 @@ int internal_boot(struct ds_config *cfg) {
   }
 
   android_native_personality();
+  ds_oom_unprotect();
 
   /* Pre-open the container log file before namespace isolation / pivot_root.
    * The FD survives mount namespace changes, ensuring all post-pivot logs
